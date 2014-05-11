@@ -5,7 +5,11 @@ import qualified Pipes.Prelude as P
 import Pipes.Concurrent
 import Control.Concurrent.Async hiding (wait)
 import Control.Applicative
+import Control.Concurrent.STM.TVar as STM
+import Control.Monad
 import Data.Maybe
+import qualified Data.Text.Lazy as T
+import Data.Text.Lazy.Encoding
 import Quid2.Pipes
 import Quid2.Pipe.Finance
 import Quid2.Pipe.File
@@ -18,6 +22,14 @@ import Web.Scotty
 import Network.Wai.Middleware.RequestLogger (logStdoutDev)
 import System.Log.Logger
 import System.Log.Handler.Simple
+-- import Text.Blaze.Html5
+-- import Text.Blaze.Html5.Attributes
+import qualified Text.Blaze.Html5 as H
+import qualified Text.Blaze.Html5.Attributes as A
+import Text.Blaze.Html.Renderer.Utf8 (renderHtml)
+
+-- PROB: github raw might return outdated file
+-- Add output to HTML and later serialized binary via websockets or server events
 
 -- t = runEffect $ fileValue 2 "/Users/titto/workspace/quid2-titto/stocks.hs") >->  >-> P.print
 
@@ -29,16 +41,15 @@ b2 = [("unip.mi",2,4),("uni.mi",4.05,5),("mt.mi",1.5,2.3)]
 
 t = main
 
--- PROB:
--- github raw might return outdated file
-
 main = initService "quid2-titto" setup
 
 setup :: Config () -> IO ()
 setup cfg = do      
   updateGlobalLogger rootLoggerName $ setLevel INFO -- DEBUG -- INFO -- DEBUG    
 
-  (userSeal,userOut) <- tittoMBox
+  reportMem <- STM.newTVarIO Nothing 
+
+  (userSeal,userOut) <- tittoMBox (pr reportMem)
   (githubUpdated,githubUpdatedTrigger) <- triggerMBox
 
   -- local
@@ -51,14 +62,26 @@ setup cfg = do
 
   scotty 8080 $ do
     middleware logStdoutDev
-        
+
+    get "/report" $ do
+      report <- liftIO $ atomically $ STM.readTVar reportMem 
+      html . decodeUtf8 . renderHtml .reportAsHTML $ report 
+      
     post "/hook/repo/:repo/:action" $ do
       repo :: String <- param "repo"
       action :: String <- param "action"
       liftIO $ githubUpdatedTrigger
       text ""
-  
+      
     where
+      pr reportMem msg = do
+        t <- timeDateTime
+        let tmsg = (t,msg) 
+        print tmsg
+        email titto "stocks" msg
+        -- say m
+        atomically $ STM.modifyTVar' reportMem (Just . maybe [tmsg] (tmsg:))
+
       updateChecksC userOut maybeSeal = do
         eitherBounds <- await
         case eitherBounds of
@@ -67,6 +90,19 @@ setup cfg = do
             liftIO $ maybe (return ()) atomically maybeSeal
             warnsSeal <- liftIO $ connectBounds userOut bounds
             updateChecksC userOut (Just warnsSeal)
+
+type Report = [(String,String)]
+
+reportAsHTML :: Maybe Report -> H.Html
+reportAsHTML mr = H.docTypeHtml $ do
+    H.head $ do
+        H.title "Events"
+    H.body $ do
+        H.p "Events"
+        maybe
+          (H.p "No events.")
+          (H.ul . mapM_ (\(d,m) -> H.li . H.toHtml $ d))
+          mr
 
 connectBounds userOut bounds = do
   (warnsSeal,warnsInput) <- onBounds bounds
@@ -91,9 +127,10 @@ triggerMBox = do
   (output, input, seal) <- spawn' Unbounded
   return (fromInput input,atomically $ send output ())
 
-tittoMBox = do
+tittoMBox pr = do
   (output, input, seal) <- spawn' Unbounded
-  mbox <- async $ do runEffect $ fromInput input >-> for cat (\m -> liftIO (print m >> email titto "stocks" m)) -- >> say m
+  mbox <- async $ do runEffect $ fromInput input >-> for cat (liftIO . pr) -- >> 
   return (seal,output) --  (mbox,output)
+           
 
 -- printWarn = P.map (\(s,v) -> unwords ["Stock",s,"has reached price",show v]) >-> for cat (\m -> liftIO (print m >> say m)) -- P.print -- P.chain (print) 
