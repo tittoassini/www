@@ -1,6 +1,5 @@
 {-# LANGUAGE NoMonomorphismRestriction  #-}
 module Quid2.Pipe.HTTP(http
-                      ,githubValue
                       ) where
 
 import Pipes
@@ -29,11 +28,3 @@ httpValue delayInSecs httpURL = http delayInSecs httpURL >-> val
 
 http delayInSecs httpURL = period (secs delayInSecs) >-> io_ (getMime 30 httpURL) >-> undup
 
--- Return contents of file in repo
-githubValue ::  (MonadIO m, Read b) => String -> String -> String -> String -> Pipe a (Either String b) m ()
-githubValue user repo branch path = io (\_ -> githubFile user repo branch path) >-> val
-
-githubFile :: String -> String -> String -> String -> IO (String, String)
-githubFile user repo branch path = (getMime 30 . concat $ ["https://raw.githubusercontent.com/",user,"/",repo,"/",branch,"/",path]) --  >>= \v -> print v >> return v 
-
-val = P.map (either Left (Right . read . snd))

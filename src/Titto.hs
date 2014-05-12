@@ -15,10 +15,12 @@ import Quid2.Pipe.Finance
 import Quid2.Pipe.File
 import Quid2.Util.Voice
 import Quid2.Util.Time
+import Quid2.Util.Dir
 import Quid2.Util.Email(email,titto)
 import Quid2.Util.Service
-import Quid2.Pipe.HTTP(githubValue)
+import qualified Quid2.Pipe.GitHub as GH
 import Web.Scotty
+import Data.String
 import Network.Wai.Middleware.RequestLogger (logStdoutDev)
 import System.Log.Logger
 import System.Log.Handler.Simple
@@ -27,9 +29,16 @@ import System.Log.Handler.Simple
 import qualified Text.Blaze.Html5 as H
 import qualified Text.Blaze.Html5.Attributes as A
 import Text.Blaze.Html.Renderer.Utf8 (renderHtml)
+import System.FilePath
 
+
+{-
+TODO:
 -- PROB: github raw might return outdated file
--- Add output to HTML and later serialized binary via websockets or server events
+-- remove tvar, use just accumulating pipe
+
+Distributed version. 
+-}
 
 -- t = runEffect $ fileValue 2 "/Users/titto/workspace/quid2-titto/stocks.hs") >->  >-> P.print
 
@@ -41,13 +50,17 @@ b2 = [("unip.mi",2,4),("uni.mi",4.05,5),("mt.mi",1.5,2.3)]
 
 t = main
 
-main = initService "quid2-titto" setup
+-- http://nano.quid2.org:8080/hook/repo/test/push
+
+serviceName = "quid2-titto"
+  
+main = initService serviceName setup
 
 setup :: Config () -> IO ()
-setup cfg = do      
-  updateGlobalLogger rootLoggerName $ setLevel INFO -- DEBUG -- INFO -- DEBUG    
-
-  reportMem <- STM.newTVarIO Nothing 
+setup cfg = do
+  updateGlobalLogger rootLoggerName $ setLevel DEBUG -- INFO -- DEBUG
+  
+  reportMem <- STM.newTVarIO Nothing
 
   (userSeal,userOut) <- tittoMBox (pr reportMem)
   (githubUpdated,githubUpdatedTrigger) <- triggerMBox
@@ -55,17 +68,33 @@ setup cfg = do
   -- local
   -- runEffect $ fileValue 5 "/Users/titto/workspace/quid2-titto/stocks.hs" >-> updateChecksC userOut Nothing
 
+  let repoDir = stateDir cfg </> "repo"
+  makeDir repoDir
+  
   -- distributed
-  async $ runEffect $ githubUpdated >-> githubValue "tittoassini" "test" "master" "values/stocks" >-> updateChecksC userOut Nothing 
+  async $ runEffect $ githubUpdated >-> GH.fileValue "quid2-titto" repoDir "tittoassini" "test" "master" "values/stocks" >-> updateChecksC userOut Nothing 
 
   githubUpdatedTrigger
+
+  serverReport <- do
+    t <- timeDateTime
+    return . scottyHTML $ 
+      H.docTypeHtml $ do
+        let h = fromString $ unwords ["Service",serviceName] 
+        H.head $ do
+          H.title h
+        H.body $ do
+          H.h1 h
+          H.p $ fromString $ unwords ["Started up at",t]
 
   scotty 8080 $ do
     middleware logStdoutDev
 
+    get "/" $ html serverReport
+      
     get "/report" $ do
       report <- liftIO $ atomically $ STM.readTVar reportMem 
-      html . decodeUtf8 . renderHtml .reportAsHTML $ report 
+      html . scottyHTML . reportAsHTML $ report 
       
     post "/hook/repo/:repo/:action" $ do
       repo :: String <- param "repo"
@@ -91,8 +120,10 @@ setup cfg = do
             warnsSeal <- liftIO $ connectBounds userOut bounds
             updateChecksC userOut (Just warnsSeal)
 
-type Report = [(String,String)]
+scottyHTML = decodeUtf8 . renderHtml
 
+type Report = [(String,String)]
+  
 reportAsHTML :: Maybe Report -> H.Html
 reportAsHTML mr = H.docTypeHtml $ do
     H.head $ do
