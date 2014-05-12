@@ -15,6 +15,7 @@ import Propellor hiding (read)
 import Propellor.Property.Git -- (cloned)
 import Propellor.Attr
 
+import System.Log.Logger
 import Data.List (intercalate)
 
 t = rep "test"
@@ -27,8 +28,9 @@ fileValue localUser workDir user repo branch path = io (\_ -> fileContent localU
 
 fileContent :: String -> FilePath -> String -> String -> String -> String -> IO String
 fileContent localUser workDir user repo branch path = do
-  clonedRepo localUser (concat ["https://github.com/",user,"/",repo]) workDir (Just branch)
+  MadeChange <- clonedRepo localUser (concat ["https://github.com/",user,"/",repo]) workDir (Just branch)
   let fs = workDir </> repo </> path
+  debugM "Quid2.Util.GitHub.fileContent" $ "Reading " ++ fs    
   readFile fs
 
 -- PROB: works only in Ubuntu/Debian

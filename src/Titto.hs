@@ -68,10 +68,9 @@ setup cfg = do
   -- local
   -- runEffect $ fileValue 5 "/Users/titto/workspace/quid2-titto/stocks.hs" >-> updateChecksC userOut Nothing
 
-  let repoDir = stateDir cfg </> "repo"
-  makeDir repoDir
-  
   -- distributed
+  repoDir <- makeDir $ stateDir cfg </> "repo"
+  
   async $ runEffect $ githubUpdated >-> GH.fileValue "quid2-titto" repoDir "tittoassini" "test" "master" "values/stocks" >-> updateChecksC userOut Nothing 
 
   githubUpdatedTrigger
