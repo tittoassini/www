@@ -62,7 +62,7 @@ setup :: Config () -> IO ()
 setup cfg = do
   updateGlobalLogger rootLoggerName $ setLevel DEBUG -- INFO -- DEBUG
 
-  email titto "quid2-titto" "just started"
+  -- email titto "quid2-titto" "just started"
   
   reportMem <- STM.newTVarIO Nothing
 
@@ -136,7 +136,7 @@ reportAsHTML mr = H.docTypeHtml $ do
         H.p "Events"
         maybe
           (H.p "No events.")
-          (H.ul . mapM_ (\(d,m) -> H.li . H.toHtml $ d))
+          (H.ul . mapM_ (\(d,m) -> H.li . H.toHtml $ (unwords [d,":",m])))
           mr
 
 connectBounds userOut bounds = do
