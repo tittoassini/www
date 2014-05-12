@@ -50,6 +50,8 @@ b2 = [("unip.mi",2,4),("uni.mi",4.05,5),("mt.mi",1.5,2.3)]
 
 t = main
 
+x = email titto "quid2-titto" "just started"
+
 -- http://nano.quid2.org:8080/hook/repo/test/push
 
 serviceName = "quid2-titto"
@@ -59,6 +61,8 @@ main = initService serviceName setup
 setup :: Config () -> IO ()
 setup cfg = do
   updateGlobalLogger rootLoggerName $ setLevel DEBUG -- INFO -- DEBUG
+
+  email titto "quid2-titto" "just started"
   
   reportMem <- STM.newTVarIO Nothing
 

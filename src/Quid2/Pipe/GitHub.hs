@@ -38,7 +38,7 @@ fileContent workDir user repo branch path = do
   debugM "Quid2.Util.GitHub.fileContent" $ "Reading " ++ fs
   r1 <- runProp $ userScriptProperty "quid2-titto" $ ["ls -l"]
   debugM "Quid2.Util.GitHub.fileContent" $ "Res1 " ++ show r1
-  let localUser = "root" -- "quid2-titto"
+  let localUser = "quid2-titto"
   r <- clonedRepo localUser url repoDir (Just branch)
   debugM "Quid2.Util.GitHub.fileContent" $ "Res " ++ show r
   readFile fs
@@ -46,7 +46,8 @@ fileContent workDir user repo branch path = do
 -- updatedRepo :: FilePath -> RepoUrl -> FilePath -> Branch -> IO ()
 -- updatedRepo workDir owner url dir branch = return ()
 
-
+-- PROB: won't run from a daemon
+-- commands that produce output will fail with a sendWakeup: invalid argument (Bad file descriptor) as the daemon has no stdin/out/err.  
 y = runProp $ userScriptProperty "" $ ["ls -l"]
 
 runProp =  runPropellor hostnameless . ensureProperty
