@@ -70,6 +70,7 @@ setup cfg = do
 
   -- distributed
   repoDir <- makeDir $ stateDir cfg </> "repo"
+  debugM $ "Made dir " ++ repoDir
   
   async $ runEffect $ githubUpdated >-> GH.fileValue "quid2-titto" repoDir "tittoassini" "test" "master" "values/stocks" >-> updateChecksC userOut Nothing 
 
