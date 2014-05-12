@@ -37,7 +37,12 @@ TODO:
 -- PROB: github raw might return outdated file
 -- remove tvar, use just accumulating pipe
 
-Distributed version. 
+Distributed version.
+
+PROB: cannot run as a service as:
+-- email won't work as we cannot access secrets after switching to quid2-titto (SOL: read them while still root)
+-- propellor shell commands needed to clone git still wont' work (even after not closing file descriptors)
+
 -}
 
 -- t = runEffect $ fileValue 2 "/Users/titto/workspace/quid2-titto/stocks.hs") >->  >-> P.print
@@ -62,7 +67,7 @@ setup :: Config () -> IO ()
 setup cfg = do
   updateGlobalLogger rootLoggerName $ setLevel DEBUG -- INFO -- DEBUG
 
-  -- email titto "quid2-titto" "just started"
+  email titto "quid2-titto" "just started"
   
   reportMem <- STM.newTVarIO Nothing
 
@@ -75,8 +80,9 @@ setup cfg = do
   -- distributed
   repoDir <- makeDir $ stateDir cfg </> "repo"
   debugM "Titto" $ "Made dir " ++ repoDir
-  
-  async $ runEffect $ githubUpdated >-> GH.fileValue repoDir "tittoassini" "test" "master" "values/stocks" >-> updateChecksC userOut Nothing 
+
+  -- NOTE: use "root" as we are running as cmd and not a real service
+  async $ runEffect $ githubUpdated >-> GH.fileValue "root" repoDir "tittoassini" "test" "master" "values/stocks" >-> updateChecksC userOut Nothing 
 
   githubUpdatedTrigger
 

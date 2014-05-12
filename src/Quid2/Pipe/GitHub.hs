@@ -25,20 +25,20 @@ x = rep "test"
 rep repo = clonedRepo "titto" ("https://github.com/tittoassini/" ++ repo) ("/tmp/repo/"++repo) Nothing
 
 -- Return contents of file in repo
-fileValue ::  (MonadIO m, Read b) => FilePath -> String -> String -> String -> String -> Pipe a (Either String b) m ()
-fileValue workDir user repo branch path = io_ (fileContent workDir user repo branch path) >-> val
+fileValue ::  (MonadIO m, Read b) => String -> FilePath -> String -> String -> String -> String -> Pipe a (Either String b) m ()
+fileValue localUser workDir user repo branch path = io_ (fileContent localUser workDir user repo branch path) >-> val
 
-fileContent :: FilePath -> String -> String -> String -> String -> IO String
-fileContent workDir user repo branch path = do  
+fileContent :: String -> FilePath -> String -> String -> String -> String -> IO String
+fileContent localUser workDir user repo branch path = do  
   -- MadeChange <- clonedRepo localUser (concat ["https://github.com/",user,"/",repo]) (workDir </> repo) (Just branch)
   let repoDir = workDir </> repo
   let url = concat ["https://github.com/",user,"/",repo]
   -- ifM (wrongRepo repoDir url) () ()
   let fs = repoDir </> path
-  debugM "Quid2.Util.GitHub.fileContent" $ "Reading " ++ fs
-  r1 <- runProp $ userScriptProperty "quid2-titto" $ ["ls -l"]
-  debugM "Quid2.Util.GitHub.fileContent" $ "Res1 " ++ show r1
-  let localUser = "quid2-titto"
+  -- debugM "Quid2.Util.GitHub.fileContent" $ "Reading " ++ fs
+  -- r1 <- runProp $ userScriptProperty "quid2-titto" $ ["ls -l"]
+  -- debugM "Quid2.Util.GitHub.fileContent" $ "Res1 " ++ show r1
+  -- let localUser = "quid2-titto"
   r <- clonedRepo localUser url repoDir (Just branch)
   debugM "Quid2.Util.GitHub.fileContent" $ "Res " ++ show r
   readFile fs
