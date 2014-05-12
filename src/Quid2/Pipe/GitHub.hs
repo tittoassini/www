@@ -36,6 +36,8 @@ fileContent workDir user repo branch path = do
   -- ifM (wrongRepo repoDir url) () ()
   let fs = repoDir </> path
   debugM "Quid2.Util.GitHub.fileContent" $ "Reading " ++ fs
+  r1 <- runProp $ userScriptProperty "quid2-titto" $ ["ls -l"]
+  debugM "Quid2.Util.GitHub.fileContent" $ "Res1 " ++ show r1
   let localUser = "root" -- "quid2-titto"
   r <- clonedRepo localUser url repoDir (Just branch)
   debugM "Quid2.Util.GitHub.fileContent" $ "Res " ++ show r
