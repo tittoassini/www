@@ -28,9 +28,10 @@ fileValue localUser workDir user repo branch path = io (\_ -> fileContent localU
 
 fileContent :: String -> FilePath -> String -> String -> String -> String -> IO String
 fileContent localUser workDir user repo branch path = do
-  MadeChange <- clonedRepo localUser (concat ["https://github.com/",user,"/",repo]) workDir (Just branch)
   let fs = workDir </> repo </> path
   debugM "Quid2.Util.GitHub.fileContent" $ "Reading " ++ fs    
+
+  MadeChange <- clonedRepo localUser (concat ["https://github.com/",user,"/",repo]) (workDir </> repo) (Just branch)
   readFile fs
 
 -- PROB: works only in Ubuntu/Debian
