@@ -72,7 +72,7 @@ setup cfg = do
   repoDir <- makeDir $ stateDir cfg </> "repo"
   debugM "Titto" $ "Made dir " ++ repoDir
   
-  async $ runEffect $ githubUpdated >-> GH.fileValue "quid2-titto" repoDir "tittoassini" "test" "master" "values/stocks" >-> updateChecksC userOut Nothing 
+  async $ runEffect $ githubUpdated >-> GH.fileValue repoDir "tittoassini" "test" "master" "values/stocks" >-> updateChecksC userOut Nothing 
 
   githubUpdatedTrigger
 

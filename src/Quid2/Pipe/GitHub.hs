@@ -10,33 +10,48 @@ import Control.Applicative
 import Control.Monad
 import Control.DeepSeq
 import Quid2.Util.HTTP(getMime)
-
 import Propellor hiding (read)
-import Propellor.Property.Git -- (cloned)
+import Propellor.Property.Git -- (wrongRepo) -- (cloned)
+import Propellor.Property.File
 import Propellor.Attr
 
 import System.Log.Logger
 import Data.List (intercalate)
 
-t = rep "test"
+t = fileContent "/tmp" "tittoassini" "test" "master" "values/stocks"
+
+x = rep "test"
 
 rep repo = clonedRepo "titto" ("https://github.com/tittoassini/" ++ repo) ("/tmp/repo/"++repo) Nothing
 
 -- Return contents of file in repo
-fileValue ::  (MonadIO m, Read b) => String -> FilePath -> String -> String -> String -> String -> Pipe a (Either String b) m ()
-fileValue localUser workDir user repo branch path = io (\_ -> fileContent localUser workDir user repo branch path) >-> val
+fileValue ::  (MonadIO m, Read b) => FilePath -> String -> String -> String -> String -> Pipe a (Either String b) m ()
+fileValue workDir user repo branch path = io_ (fileContent workDir user repo branch path) >-> val
 
-fileContent :: String -> FilePath -> String -> String -> String -> String -> IO String
-fileContent localUser workDir user repo branch path = do
-  let fs = workDir </> repo </> path
-  debugM "Quid2.Util.GitHub.fileContent" $ "Reading " ++ fs    
-
-  MadeChange <- clonedRepo localUser (concat ["https://github.com/",user,"/",repo]) (workDir </> repo) (Just branch)
+fileContent :: FilePath -> String -> String -> String -> String -> IO String
+fileContent workDir user repo branch path = do  
+  -- MadeChange <- clonedRepo localUser (concat ["https://github.com/",user,"/",repo]) (workDir </> repo) (Just branch)
+  let repoDir = workDir </> repo
+  let url = concat ["https://github.com/",user,"/",repo]
+  -- ifM (wrongRepo repoDir url) () ()
+  let fs = repoDir </> path
+  debugM "Quid2.Util.GitHub.fileContent" $ "Reading " ++ fs
+  let localUser = "quid2-titto"
+  r <- clonedRepo localUser url repoDir (Nothing) -- (Just branch)
+  debugM "Quid2.Util.GitHub.fileContent" $ "Res " ++ show r
   readFile fs
+
+-- updatedRepo :: FilePath -> RepoUrl -> FilePath -> Branch -> IO ()
+-- updatedRepo workDir owner url dir branch = return ()
+
+
+y = runProp $ userScriptProperty "" $ ["ls -l"]
+
+runProp =  runPropellor hostnameless . ensureProperty
 
 -- PROB: works only in Ubuntu/Debian
 clonedRepo :: UserName -> RepoUrl -> FilePath -> Maybe Branch -> IO Result
-clonedRepo owner url dir mbranch = runPropellor hostnameless $ ensureProperty $ cloned owner url dir mbranch
+clonedRepo owner url dir mbranch = runProp $ cloned_ owner url dir mbranch
 
 -- Return contents of file in repo
 fileValueMIME ::  (MonadIO m, Read b) => FilePath -> String -> String -> String -> String -> Pipe a (Either String b) m ()
