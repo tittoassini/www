@@ -42,7 +42,8 @@ Distributed version.
 PROB: cannot run as a service as:
 -- email won't work as we cannot access secrets after switching to quid2-titto (SOL: read them while still root)
 -- propellor shell commands needed to clone git still wont' work (even after not closing file descriptors)
-
+SOL: start manually as:
+killall -s SIGKILL quid2-titto; /root/.cabal/bin/quid2-titto > /dev/null 2>&1 &
 -}
 
 -- t = runEffect $ fileValue 2 "/Users/titto/workspace/quid2-titto/stocks.hs") >->  >-> P.print
