@@ -164,12 +164,13 @@ setup cfg = do
 
       updateChecksC userOut maybeSeal = do
         eitherBounds <- await
+        liftIO $ maybe (return ()) atomically maybeSeal
         case eitherBounds of
-          Left err -> do
+          Left err -> do -- BUG: no message and gets stuck
             liftIO $ atomically $ send userOut err
-            updateChecksC userOut maybeSeal
+            updateChecksC userOut Nothing -- maybeSeal
           Right bounds -> do
-            liftIO $ maybe (return ()) atomically maybeSeal
+            -- liftIO $ maybe (return ()) atomically maybeSeal
             warnsSeal <- liftIO $ connectBounds userOut bounds
             updateChecksC userOut (Just warnsSeal)
 
