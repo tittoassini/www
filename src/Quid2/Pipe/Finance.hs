@@ -1,6 +1,6 @@
 {-# LANGUAGE ScopedTypeVariables ,NoMonomorphismRestriction ,TypeSynonymInstances ,FlexibleInstances #-}
 module Quid2.Pipe.Finance(
-  quote,quoteP,Quote,StockBounds
+  quote,quoteP,Quote,StockBounds,Symbol
   ) where
 
 import Control.Applicative

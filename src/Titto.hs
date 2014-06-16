@@ -40,7 +40,7 @@ Distributed version.
 * Server that returns streams using SSE or long polling. 
 * How to add other js handlers?
 
-PROB: GOT STUCK? NO WARNINGS RECEIVED.
+PROB: If the data is incorrect it gets stuck and NO WARNINGS RECEIVED.
 
 PROB: cannot run as a service as:
 -- email won't work as we cannot access secrets after switching to quid2-titto (SOL: read them while still root)
@@ -52,10 +52,45 @@ killall -s SIGKILL quid2-titto; /root/.cabal/bin/quid2-titto > /dev/null 2>&1 &
 -- t = runEffect $ fileValue 2 "/Users/titto/workspace/quid2-titto/stocks.hs") >->  >-> P.print
 
 tt0 = onBounds b2
--- tt = runEffect $ stockBounds b2
+tt = runEffect $ stockBounds ("AAPL",66,70) >-> P.print
 
 b1 = [("AAPL",366,500)]
 b2 = [("unip.mi",2,4),("uni.mi",4.05,5),("mt.mi",1.5,2.3)]
+
+b3 = [("AAPL",60,80)
+     ,("XFFE.mi",121,126)
+     ,("xstr.mi",220,233)
+     ,("XBCT.MI",188,190)
+     ,("eue.mi",29.5,35)
+     ,("uti.mi",33.3,37)
+     ,("ener.mi",15,17)
+     ,("fmi.mi",25,37.5)
+     ,("ETFMIB.MI",20.5,22.7)
+     ,("grc.mi",1.63,2.15)
+     ,("lafri.mi",8.1,9)
+     ,("unip.mi",3.8,5.36),("uni.mi",3.9,5.8)
+     ,("mt.mi",2.2,2.7),("bp.mi",12.5,15),("ubi.mi",6,7.4)
+     ,("ana.mc",40,66)
+     ,("QFAL.MI",1000,1525)
+     ,("QFEI1.MI",550,800)
+     ,("QFIRS.MI",945,1150)
+     ,("QFOBE.MI",640,850)
+     ,("CD91.DE",14.8,25)
+     ,("UIMV.DE",4.5,8)
+      
+     ,("xuks.l",540,590)
+     ,("imib.l",750,1080)
+     ,("inrg.l",350,410)
+     ,("xfvt.l",1370,1953)
+      
+     ,("IEEM.MI",25,30)
+     ,("xmrc.mi",16,22)
+     ,("xx25.mi",16,23.5)
+     ,("BRZ.MI",28,40)
+     ,("ITKY.MI",21,28)
+     ,("PSP",11.1,12.5)
+     ,("PHAG.MI",13,22)
+     ]
 
 t = main
 
@@ -130,7 +165,9 @@ setup cfg = do
       updateChecksC userOut maybeSeal = do
         eitherBounds <- await
         case eitherBounds of
-          Left err -> updateChecksC userOut maybeSeal
+          Left err -> do
+            liftIO $ atomically $ send userOut err
+            updateChecksC userOut maybeSeal
           Right bounds -> do
             liftIO $ maybe (return ()) atomically maybeSeal
             warnsSeal <- liftIO $ connectBounds userOut bounds
@@ -164,8 +201,8 @@ onBounds bounds = do
   -- mapM_ wait (:ts)
   return (seal,input)
 
--- stockBounds :: StockBounds -> Effect IO ()
-stockBounds (name,low,high) = quoteP name >-> P.filter (\(s,ev)-> either (const True) (\v -> v<=low || v >= high) ev) >-> P.map showQuote -- (\(s,v) -> unwords ["Stock",s,"has reached price",show v])
+stockBounds :: (String, Double, Double) -> Producer String IO ()
+stockBounds (name,low,high) = quoteP name >-> P.filter (\(s,ev)-> either (const True) (\v -> v<=low || v >= high) ev) >-> P.map showQuote
 
 showQuote (s,Left err) = unwords ["Stock",s,"'s value cannot be read:",take 100 $ show err]
 showQuote (s,Right v)  = unwords ["Stock",s,"has reached price",show v]                                                                
@@ -174,6 +211,7 @@ triggerMBox = do
   (output, input, seal) <- spawn' Unbounded
   return (fromInput input,atomically $ send output ())
 
+tittoMBox :: (b -> IO ()) -> IO (STM (), Output b)
 tittoMBox pr = do
   (output, input, seal) <- spawn' Unbounded
   mbox <- async $ do runEffect $ fromInput input >-> for cat (liftIO . pr) -- >> 
