@@ -34,21 +34,24 @@ import System.FilePath
 
 {-
 TODO:
--- PROB: github raw might return outdated file
 -- remove tvar, use just accumulating pipe
 
 Distributed version.
+* Server that returns streams using SSE or long polling. 
+* How to add other js handlers?
+
+PROB: GOT STUCK? NO WARNINGS RECEIVED.
 
 PROB: cannot run as a service as:
 -- email won't work as we cannot access secrets after switching to quid2-titto (SOL: read them while still root)
 -- propellor shell commands needed to clone git still wont' work (even after not closing file descriptors)
-SOL: start manually as:
+SOL: start manually as (already done by propellor)
 killall -s SIGKILL quid2-titto; /root/.cabal/bin/quid2-titto > /dev/null 2>&1 &
 -}
 
 -- t = runEffect $ fileValue 2 "/Users/titto/workspace/quid2-titto/stocks.hs") >->  >-> P.print
 
-tt = onBounds b2
+tt0 = onBounds b2
 -- tt = runEffect $ stockBounds b2
 
 b1 = [("AAPL",366,500)]
@@ -76,15 +79,16 @@ setup cfg = do
   (githubUpdated,githubUpdatedTrigger) <- triggerMBox
 
   -- local
-  -- runEffect $ fileValue 5 "/Users/titto/workspace/quid2-titto/stocks.hs" >-> updateChecksC userOut Nothing
+  -- runEffect $ fileValue 5 "/Users/titto/workspace/quid2-titto/test/stocks.hs" >-> updateChecksC userOut Nothing
 
   -- distributed
   repoDir <- makeDir $ stateDir cfg </> "repo"
   debugM "Titto" $ "Made dir " ++ repoDir
 
   -- NOTE: use "root" as we are running as cmd and not a real service
+  -- Every time we get a github update, rebuild checks
   async $ runEffect $ githubUpdated >-> GH.fileValue "root" repoDir "tittoassini" "test" "master" "values/stocks" >-> updateChecksC userOut Nothing 
-
+  
   githubUpdatedTrigger
 
   serverReport <- do
@@ -114,6 +118,7 @@ setup cfg = do
       text ""
       
     where
+      -- Send output by email and also save it for display on /report
       pr reportMem msg = do
         t <- timeDateTime
         let tmsg = (t,msg) 

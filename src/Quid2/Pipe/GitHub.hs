@@ -41,7 +41,9 @@ fileContent localUser workDir user repo branch path = do
   -- let localUser = "quid2-titto"
   r <- clonedRepo localUser url repoDir (Just branch)
   debugM "Quid2.Util.GitHub.fileContent" $ "Res " ++ show r
-  readFile fs
+  cs <- readFile fs
+  debugM "Quid2.Util.GitHub.fileContent2" $ "Contents: " ++ cs
+  return cs
 
 -- updatedRepo :: FilePath -> RepoUrl -> FilePath -> Branch -> IO ()
 -- updatedRepo workDir owner url dir branch = return ()

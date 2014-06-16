@@ -22,7 +22,8 @@ import Quid2.Pipes
 t :: IO ()
 t = runEffect $ stockCheckP ("mt.mi",">=",2) >-> P.print
 t4 = runEffect $ stockCheckP ("mtNOTREALLY.mi",">=",2) >-> P.print
-ttt = runEffect $ quoteP "mt.mi" >-> P.print
+t5 = runEffect $ stockCheckP ("UIMV.DE",">=",2) >-> P.print
+ttt = runEffect $ quoteP "UIMV.DE" >-> P.print
 tt = quote "mt.mi"
 x = quote "xfvt.l"
 y = quote "QFEI1.MI"
@@ -30,7 +31,7 @@ y = quote "QFEI1.MI"
 -- stockPipe (name,cond,val) = finQuote name >-> filterD (\(s,v)-> getCond cond val v) >-> mapD (\(s,v) -> unwords ["Stock",s,"has reached price",show v]) >-> chanOut "urgentStock"
 
 stockCheckP :: StockCheck -> Producer Quote IO ()
-stockCheckP (name,cond,val) = quoteP name >-> P.filter (\(_,ev)-> either (const True) (\v -> getCond cond val v) ev)
+stockCheckP (name,cond,val) = quoteP name >-> P.filter (\(_,ev)-> either (const True) (\v -> getCond cond val v) ev) >-> undup
 
 getCond cond val = (flip . fromJust $ M.lookup cond conds) val
 conds = M.fromList [("<",(<)),("<=",(<=)),(">",(>)),(">=",(>=))]
@@ -40,23 +41,17 @@ type StockCheck = (String,String,Double)
 type StockBounds = (String,Double,Double)
 
 quoteP :: Symbol -> Producer Quote IO ()
-quoteP symbol = loop >-> undup
-  where
-    loop = do
-      q <- liftIO $ quote symbol
-      yield q
-      waitFor $ minutes 15
-      loop
+quoteP symbol = period (minutes 15) >-> P.mapM (\_ -> quote symbol)
 
 type Symbol = String
 type Quote = (Symbol,Either String Double)
 
--- Return a value when available or never if never available
 quote :: String -> IO Quote
 quote id = do
   ev <- readYahoo_ id
   return (id,either (Left . show) (\v -> if v > 100000 then Left $ unwords ["Impossible value",show v] else Right v) ev)
 
+-- Return a value when available or never if never available
 quoteEventually :: String -> IO Double
 quoteEventually id = do
   r <- readYahoo_ id
