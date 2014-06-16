@@ -114,7 +114,7 @@ setup cfg = do
   (githubUpdated,githubUpdatedTrigger) <- triggerMBox
 
   -- local test
-  runEffect $ fileValue 5 "/Users/titto/workspace/quid2-titto/test/stocks.hs" >-> updateChecksC userOut Nothing
+  -- runEffect $ fileValue 5 "/Users/titto/workspace/quid2-titto/test/stocks.hs" >-> updateChecksC userOut Nothing
 
   -- distributed
   repoDir <- makeDir $ stateDir cfg </> "repo"
