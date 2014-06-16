@@ -113,8 +113,8 @@ setup cfg = do
   (userSeal,userOut) <- tittoMBox (pr reportMem)
   (githubUpdated,githubUpdatedTrigger) <- triggerMBox
 
-  -- local
-  -- runEffect $ fileValue 5 "/Users/titto/workspace/quid2-titto/test/stocks.hs" >-> updateChecksC userOut Nothing
+  -- local test
+  runEffect $ fileValue 5 "/Users/titto/workspace/quid2-titto/test/stocks.hs" >-> updateChecksC userOut Nothing
 
   -- distributed
   repoDir <- makeDir $ stateDir cfg </> "repo"
@@ -167,9 +167,11 @@ setup cfg = do
         liftIO $ maybe (return ()) atomically maybeSeal
         case eitherBounds of
           Left err -> do -- BUG: no message and gets stuck
+            liftIO $ print $ "Error in stocks data: " ++ err
             liftIO $ atomically $ send userOut err
             updateChecksC userOut Nothing -- maybeSeal
           Right bounds -> do
+            liftIO $ atomically $ send userOut "Updated stocks data"            
             -- liftIO $ maybe (return ()) atomically maybeSeal
             warnsSeal <- liftIO $ connectBounds userOut bounds
             updateChecksC userOut (Just warnsSeal)
