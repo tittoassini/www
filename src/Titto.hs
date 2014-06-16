@@ -167,14 +167,15 @@ setup cfg = do
         liftIO $ maybe (return ()) atomically maybeSeal
         case eitherBounds of
           Left err -> do -- BUG: no message and gets stuck
-            liftIO $ print $ "Error in stocks data: " ++ err
-            liftIO $ atomically $ send userOut err
-            updateChecksC userOut Nothing -- maybeSeal
+            msg $ "Error in stocks data: " ++ err
+            updateChecksC userOut Nothing
           Right bounds -> do
-            liftIO $ atomically $ send userOut "Updated stocks data"            
+            msg "Updated stocks data"            
             -- liftIO $ maybe (return ()) atomically maybeSeal
             warnsSeal <- liftIO $ connectBounds userOut bounds
             updateChecksC userOut (Just warnsSeal)
+        where msg = liftIO . atomically . send userOut
+  
 
 scottyHTML = decodeUtf8 . renderHtml
 

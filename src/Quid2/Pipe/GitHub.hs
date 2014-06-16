@@ -26,8 +26,8 @@ x = rep "test"
 rep repo = clonedRepo "titto" ("https://github.com/tittoassini/" ++ repo) ("/tmp/repo/"++repo) Nothing
 
 -- Return contents of file in repo
-fileValue ::  (MonadIO m, Read b) => String -> FilePath -> String -> String -> String -> String -> Pipe a (Either String b) m ()
-fileValue localUser workDir user repo branch path = io_ (fileContent localUser workDir user repo branch path) >-> val
+fileValue ::  (NFData b,MonadIO m, Read b) => String -> FilePath -> String -> String -> String -> String -> Pipe a (Either String b) m ()
+fileValue localUser workDir user repo branch path = io_ (read <$> (fileContent localUser workDir user repo branch path))
 
 fileContent :: String -> FilePath -> String -> String -> String -> String -> IO String
 fileContent localUser workDir user repo branch path = do  
@@ -43,7 +43,7 @@ fileContent localUser workDir user repo branch path = do
   r <- clonedRepo localUser url repoDir (Just branch)
   debugM "Quid2.Util.GitHub.fileContent" $ "Res " ++ show r
   cs <- readFile fs
-  debugM "Quid2.Util.GitHub.fileContent2" $ "Contents: " ++ cs
+  -- debugM "Quid2.Util.GitHub.fileContent2" $ "Contents: " ++ cs
   return cs
 
 -- updatedRepo :: FilePath -> RepoUrl -> FilePath -> Branch -> IO ()
@@ -68,6 +68,7 @@ fileValueMIME workDir user repo branch path = io (\_ -> fileMIME user repo branc
 fileMIME :: String -> String -> String -> String -> IO (String, String)
 fileMIME user repo branch path = (getMime 30 . concat $ ["https://raw.githubusercontent.com/",user,"/",repo,"/",branch,"/",path]) --  >>= \v -> print v >> return v 
 
+-- BUG: if these fails to read they will throw an error and break the pipe
 valMIME = P.map (either Left (Right . read . snd))
 
 val = P.map (either Left (Right . read))
