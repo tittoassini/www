@@ -13,7 +13,8 @@ import Quid2.Util.HTTP(getMime)
 import Propellor hiding (read)
 import Propellor.Property.Git -- (wrongRepo) -- (cloned)
 import Propellor.Property.File
-import Propellor.Attr
+-- import Propellor.Attr
+import Propellor.Types
 
 import System.Log.Logger
 import Data.List (intercalate)
@@ -52,7 +53,9 @@ fileContent localUser workDir user repo branch path = do
 -- commands that produce output will fail with a sendWakeup: invalid argument (Bad file descriptor) as the daemon has no stdin/out/err.  
 y = runProp $ userScriptProperty "" $ ["ls -l"]
 
-runProp =  runPropellor hostnameless . ensureProperty
+-- runProp =  runPropellor hostnameless . ensureProperty
+
+runProp =  runPropellor (Host "no host" [] undefined) . ensureProperty
 
 -- PROB: works only in Ubuntu/Debian
 clonedRepo :: UserName -> RepoUrl -> FilePath -> Maybe Branch -> IO Result
