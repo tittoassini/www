@@ -8,7 +8,7 @@ import Control.Monad
 import Control.Exception
 import Data.Maybe
 import qualified Data.Map as M
-
+import Data.Char
 import Pipes
 import qualified Pipes.Prelude as P
 import System.IO
@@ -24,7 +24,7 @@ t = runEffect $ stockCheckP ("mt.mi",">=",2) >-> P.print
 t4 = runEffect $ stockCheckP ("mtNOTREALLY.mi",">=",2) >-> P.print
 t5 = runEffect $ stockCheckP ("UIMV.DE",">=",2) >-> P.print
 ttt = runEffect $ quoteP "UIMV.DE" >-> P.print
-tt = quote "mt.mi"
+tt = mapM quote ["mt.mi","UIMV.dE"]
 x = quote "xfvt.l"
 y = quote "QFEI1.MI"
 
@@ -48,7 +48,7 @@ type Quote = (Symbol,Either String Double)
 
 quote :: String -> IO Quote
 quote id = do
-  ev <- readYahoo_ id
+  ev <- if map toLower id == "uimv.de" then readGoogle "FRA%3AUIMV" else readYahoo_ id
   return (id,either (Left . show) (\v -> if v > 100000 then Left $ unwords ["Impossible value",show v] else Right v) ev)
 
 -- Return a value when available or never if never available
@@ -62,5 +62,14 @@ quoteEventually id = do
 readYahoo_ id = strictTry $ do
   (_,q) <- getMime 45 $ "http://uk.finance.yahoo.com/q?s=" ++ id
   let Just val = filter (/= ',') <$> (after "<span class=\"time_rtq_ticker\"><" q) >>= between ">" "</span>"
+  -- print val  
+  return (read val :: Double)
+
+g = readGoogle "FRA%3AUIMV"
+
+readGoogle id =  strictTry $ do
+  (_,q) <- getMime 45 $ "https://www.google.co.uk/finance?q=" ++ id
+  -- print $ after "perf:" q >>= between ",p:\"" "\""
+  let Just val = after "perf:" q >>= between ",p:\"" "\""
   -- print val  
   return (read val :: Double)
