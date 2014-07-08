@@ -1,7 +1,7 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
 module Quid2.Pipes(undup
                   --,everySecs,everyTime
-                  ,period
+                  ,period,cronMinutes
                   ,io_,io) where
 
 import Pipes
@@ -12,10 +12,11 @@ import Quid2.Util.Time
 import Quid2.Util.Strict
 import Control.DeepSeq
 
-t,tt :: IO ()
-t = runEffect $ period (secs 2) >-> io (print . ("GOT " ++) . show)  >-> P.print
-
+t,tt,ttt :: IO ()
+-- t = runEffect $ everySecs 30 >-> io (print . ("GOT " ++) . show)  >-> P.print
+t = runEffect $ cronMinutes 2 >-> io_ (mm <$> hms) >-> P.print
 tt = runEffect $ each [1,3,3,3,4,4,5,7::Int] >-> undup >-> P.print
+ttt = runEffect $ period (secs 2) >-> io (print . ("GOT " ++) . show)  >-> P.print
 
 -- Remove duplicates values
 undup :: (Monad m, Eq a) => Pipe a a m ()
@@ -52,4 +53,7 @@ everyTime delay io = forever $ do
   v <- liftIO . (either (Left . show) Right <$>) . strictTry $ io
   yield v
   waitFor delay
-  
+
+-- On the indicated minute 
+cronMinutes :: Int -> Producer () IO ()
+cronMinutes minDiv = everySecs 20 (mm <$> hms) >-> P.filter (either (const False) ((==0) . (flip mod minDiv))) >-> undup >-> P.map (const ())

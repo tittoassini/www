@@ -30,7 +30,13 @@ import qualified Text.Blaze.Html5 as H
 import qualified Text.Blaze.Html5.Attributes as A
 import Text.Blaze.Html.Renderer.Utf8 (renderHtml)
 import System.FilePath
-
+import qualified Network.HTTP as N
+import qualified Network.Browser as N
+import Data.Aeson
+import Data.Aeson.Types
+import qualified Data.ByteString.Lazy as L
+import Data.List
+import Quid2.Util.String
 
 {-
 TODO:
@@ -123,6 +129,10 @@ setup cfg = do
   -- NOTE: use "root" as we are running as cmd and not a real service
   -- Every time we get a github update, rebuild checks
   async $ runEffect $ githubUpdated >-> GH.fileValue "root" repoDir "tittoassini" "test" "master" "values/stocks" >-> updateChecksC userOut Nothing 
+
+  loreDir <- makeDir $ stateDir cfg </> "lore"
+  let salusFile = loreDir </> "salus"
+  runSalus salusFile
   
   githubUpdatedTrigger
 
@@ -145,7 +155,11 @@ setup cfg = do
     get "/report" $ do
       report <- liftIO $ atomically $ STM.readTVar reportMem 
       html . scottyHTML . reportAsHTML $ report 
-      
+
+    get "/lore" $ do
+      setHeader "Content-Type" "text/csv"
+      file salusFile
+    
     post "/hook/repo/:repo/:action" $ do
       repo :: String <- param "repo"
       action :: String <- param "action"
@@ -175,7 +189,37 @@ setup cfg = do
             warnsSeal <- liftIO $ connectBounds userOut bounds
             updateChecksC userOut (Just warnsSeal)
         where msg = liftIO . atomically . send userOut
-  
+
+s = salus "/tmp/lore" 
+ss = runSalus "/tmp/lore"
+
+runSalus dir = async $ runEffect $ cronMinutes 5 >-> io_ (salus dir) >-> P.drain -- P.print -- drain
+
+salus dir = readSalus >>= writeSalus dir
+
+readSalus :: IO (Maybe Salus)
+readSalus = do
+      (_, rsp) <- N.browse $ do
+        N.setAllowRedirects True --  
+        (_,devs) <- N.request (N.postRequestWithBody "http://salus-it500.com/public/login.php?lang=en" "application/x-www-form-urlencoded" "IDemail=lorenzo.ambri%40gmail.com&password=password&login=Login")
+        let Just token = (\b -> after "name=\"token\"" b >>= between "value=\"" "\"") . N.rspBody $ devs
+        -- liftIO $ print token
+
+        N.request $ N.getRequest $ "http://salus-it500.com/public/ajax_device_values.php?devId=17517&token=" ++ token
+      return $ (decode (encodeUtf8 . T.pack . N.rspBody $ rsp) :: Maybe Salus)
+
+writeSalus dir Nothing  = return ()
+writeSalus fs (Just s) = do
+  [d,t] <- words <$> timeDateTime
+  -- appendFile (fs </> "salus") $ intercalate "," [d,concat [show (hh t),":",show (mm t)], show $ temp1 s,show $ temp2 s] ++ "\n"
+  appendFile fs $ intercalate "," [d,let Just s = till "." t in s, show $ temp1 s,show $ temp2 s] ++ "\n"
+
+data Salus = Salus {temp1::Double,temp2::Double}
+           deriving Show
+
+instance FromJSON Salus where
+     parseJSON (Object v) = Salus <$> (read <$> v .: "CH1currentRoomTemp") <*> (read <$> v .: "CH2currentRoomTemp")
+     parseJSON _          = mzero
 
 scottyHTML = decodeUtf8 . renderHtml
 
