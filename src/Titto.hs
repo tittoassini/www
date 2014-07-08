@@ -37,6 +37,7 @@ import Data.Aeson.Types
 import qualified Data.ByteString.Lazy as L
 import Data.List
 import Quid2.Util.String
+import System.Directory
 
 {-
 TODO:
@@ -156,10 +157,25 @@ setup cfg = do
       report <- liftIO $ atomically $ STM.readTVar reportMem 
       html . scottyHTML . reportAsHTML $ report 
 
-    get "/lore" $ do
+    get "/lore" $ html $ scottyHTML $ 
+      H.docTypeHtml $ do
+        let h = fromString $ "La roba ddi Lore"
+        H.head $ do
+          H.title h
+        H.body $ do
+          H.h1 h
+          H.ul $ do            
+            H.li $ (H.a "get data as csv") H.! (A.href "/lore/view")
+            H.li $ (H.a "clear data")      H.! (A.href "/lore/clear")
+
+    get "/lore/view" $ do
       setHeader "Content-Type" "text/csv"
       file salusFile
-    
+
+    get "/lore/clear" $ do
+      liftIO $ removeFile salusFile
+      text "salus file has been deleted"
+
     post "/hook/repo/:repo/:action" $ do
       repo :: String <- param "repo"
       action :: String <- param "action"
@@ -191,7 +207,7 @@ setup cfg = do
         where msg = liftIO . atomically . send userOut
 
 s = salus "/tmp/lore" 
-ss = runSalus "/tmp/lore"
+s2 = runSalus "/tmp/lore"
 
 runSalus dir = async $ runEffect $ cronMinutes 5 >-> io_ (salus dir) >-> P.drain -- P.print -- drain
 
@@ -200,26 +216,29 @@ salus dir = readSalus >>= writeSalus dir
 readSalus :: IO (Maybe Salus)
 readSalus = do
       (_, rsp) <- N.browse $ do
-        N.setAllowRedirects True --  
+        N.setAllowRedirects True
         (_,devs) <- N.request (N.postRequestWithBody "http://salus-it500.com/public/login.php?lang=en" "application/x-www-form-urlencoded" "IDemail=lorenzo.ambri%40gmail.com&password=password&login=Login")
         let Just token = (\b -> after "name=\"token\"" b >>= between "value=\"" "\"") . N.rspBody $ devs
-        -- liftIO $ print token
 
         N.request $ N.getRequest $ "http://salus-it500.com/public/ajax_device_values.php?devId=17517&token=" ++ token
-      return $ (decode (encodeUtf8 . T.pack . N.rspBody $ rsp) :: Maybe Salus)
+      let dt = encodeUtf8 . T.pack . N.rspBody $ rsp
+      -- print dt
+      return $ decode dt
 
 writeSalus dir Nothing  = return ()
 writeSalus fs (Just s) = do
   [d,t] <- words <$> timeDateTime
-  -- appendFile (fs </> "salus") $ intercalate "," [d,concat [show (hh t),":",show (mm t)], show $ temp1 s,show $ temp2 s] ++ "\n"
-  appendFile fs $ intercalate "," [d,let Just s = till "." t in s, show $ temp1 s,show $ temp2 s] ++ "\n"
+  -- appendFile (fs </> "salus") 
+  appendFile fs $ intercalate "," ([d,let Just s = till "." t in s] ++ flds s) ++ "\r\n"
 
-data Salus = Salus {temp1::Double,temp2::Double}
+data Salus = Salus {flds::[String]} -- {temp1::Double,temp2::Double}
            deriving Show
 
 instance FromJSON Salus where
-     parseJSON (Object v) = Salus <$> (read <$> v .: "CH1currentRoomTemp") <*> (read <$> v .: "CH2currentRoomTemp")
+     parseJSON (Object v) = Salus <$> (mapM (v .:) salusFlds) -- <$> (read <$> v .: "CH1currentRoomTemp") <*> (read <$> v .: "CH2currentRoomTemp")
      parseJSON _          = mzero
+
+salusFlds = ["CH1currentRoomTemp","CH1currentSetPoint","CH1autoOff","CH1manual","CH1schedType","CH1heatOnOffStatus","CH1autoMode","CH1heatOnOff","CH1frostActive","CH2currentRoomTemp","CH2currentSetPoint","CH2autoOff","CH2manual","CH2schedType","CH2heatOnOffStatus","CH2autoMode","CH2heatOnOff","CH2frostActive","HWmode","HWboost","HWschedType","HWonOffStatus","HWautoMode","esStatus","tempUnit"]
 
 scottyHTML = decodeUtf8 . renderHtml
 
