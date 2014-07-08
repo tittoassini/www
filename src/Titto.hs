@@ -250,7 +250,7 @@ onBounds bounds = do
   return (seal,input)
 
 stockBounds :: (String, Double, Double) -> Producer String IO ()
-stockBounds (name,low,high) = quoteP name >-> P.filter (\(s,ev)-> either (const True) (\v -> v<=low || v >= high) ev) >-> P.map showQuote
+stockBounds (name,low,high) = quoteP name >-> P.filter (\(s,ev)-> either (const True) (\v -> v<=low || v >= high) ev) >-> P.map showQuote >-> undup
 
 showQuote (s,Left err) = unwords ["Stock",s,"'s value cannot be read:",take 100 $ show err]
 showQuote (s,Right v)  = unwords ["Stock",s,"has reached price",show v]                                                                
