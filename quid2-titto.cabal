@@ -51,6 +51,7 @@ executable quid2-titto
                , wai >= 3.0.2.3
                , wai-extra
                , wai-app-static
+               , conduit-extra >= 1.1.7.3
   ghc-options: -threaded
 
 
