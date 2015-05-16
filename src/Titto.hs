@@ -182,7 +182,6 @@ setup cfg = do
   -- Run web static sites
   forkIO webServer
 
-
   -- nano.quid2.org services
   scotty 8080 $ do
     middleware logStdoutDev
@@ -253,13 +252,13 @@ hosts = [h "quid2.org"
         ,h "jslib.quicquid.org"
         ,h "massimoassini.quicquid.org"
         ,h "ska.quicquid.org"
-        ,h3 "finance.quicquid.org" "finance.quicquid.org" True
+        ,h3 "finance.quicquid.org" "finance.quicquid.org" True -- PROB: NO LIVE UPDATE, NEED TO ADD finance
         ,h3 "quid2.net"    "quid2.org" False
         ,h3 "quicquid.org" "quid2.org" False
      ] where
     h n = h3 n n False
     h3 n n2 b = Host {hostDomain=n,hostDir=T.concat [d,n2,"/web"],mutable=b}
-    d = "/Users/titto/workspace/" -- "/home/workspace/"
+    d = "/root/repo/workspace/" -- "/Users/titto/workspace/" -- "/home/workspace/"
 
 nonStaticPrefixes = [] -- ["/api","/auth"]
 
