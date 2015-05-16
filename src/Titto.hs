@@ -294,7 +294,7 @@ connectBounds userOut bounds = do
   return warnsSeal
 
 onBounds bounds = do
-  (output, input, seal) <- spawn' unbounded
+  (output, input, seal) <- spawn' Unbounded
 
   ts <- mapM (\b -> async (runEffect $ stockBounds b >-> toOutput output)) bounds
 
@@ -308,12 +308,12 @@ showQuote (s,Left err) = unwords ["Stock",s,"'s value cannot be read:",take 100 
 showQuote (s,Right v)  = unwords ["Stock",s,"has reached price",show v]
 triggerMBox :: MonadIO m => IO (Producer () m (), IO Bool)
 triggerMBox = do
-  (output, input, seal) <- spawn' unbounded
+  (output, input, seal) <- spawn' Unbounded
   return (fromInput input,atomically $ send output ())
 
 tittoMBox :: (b -> IO ()) -> IO (STM (), Output b)
 tittoMBox pr = do
-  (output, input, seal) <- spawn' unbounded
+  (output, input, seal) <- spawn' Unbounded
   mbox <- async $ do runEffect $ fromInput input >-> for cat (liftIO . pr) -- >>
   return (seal,output) --  (mbox,output)
 
