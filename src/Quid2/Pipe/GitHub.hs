@@ -1,23 +1,22 @@
 {-# LANGUAGE NoMonomorphismRestriction  #-}
 module Quid2.Pipe.GitHub(fileValue) where
 
-import Pipes
-import qualified Pipes.Prelude as P
-import Quid2.Pipes
+import Quid2.Pipes hiding (read,show,concat)
+import qualified Quid2.Pipes as P
 -- import Quid2.Pipe.Time
 -- import Github.Gists -- import qualified System.IO as IO
 import Control.Applicative
-import Control.Monad
+-- import Control.Monad
 import Control.DeepSeq
 import Quid2.Util.HTTP(getMime)
 import Propellor hiding (read)
 import Propellor.Property.Git -- (wrongRepo) -- (cloned)
-import Propellor.Property.File
+-- import Propellor.Property.File
 -- import Propellor.Attr
-import Propellor.Types
+-- import Propellor.Types
 
 import System.Log.Logger
-import Data.List (intercalate)
+-- import Data.List (intercalate)
 
 t = fileContent "/tmp" "tittoassini" "test" "master" "values/stocks"
 

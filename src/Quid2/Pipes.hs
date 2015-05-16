@@ -2,9 +2,14 @@
 module Quid2.Pipes(undup
                   --,everySecs,everyTime
                   ,period,cronMinutes
-                  ,io_,io) where
+                  ,io_,io
+                  ,runSimul,act,sit
+                  ,module Pipes
+                  ,module Pipes.Prelude,P.print,P.show
+                  ) where
 
 import Pipes
+import Pipes.Prelude hiding (show,print)
 import qualified Pipes.Prelude as P
 import Control.Applicative
 import Control.Monad
@@ -17,6 +22,27 @@ t,tt,ttt :: IO ()
 t = runEffect $ cronMinutes 2 >-> io_ (mm <$> hms) >-> P.print
 tt = runEffect $ each [1,3,3,3,4,4,5,7::Int] >-> undup >-> P.print
 ttt = runEffect $ period (secs 2) >-> io (print . ("GOT " ++) . show)  >-> P.print
+
+g = runSimul [act Nothing
+             ,sit 1
+             ,act Nothing
+             ,sit 3
+             ,act $ Just "%H:%M.%S"
+             ,sit 2
+             ,act Nothing] P.print
+
+runSimul ii p = runEffect $ each ii >-> simul >-> p
+
+-- Simulate a sequence of events and pauses.
+act = Right
+sit = Left . secs 
+
+simul :: MonadIO m => Proxy () (Either Int y) () y m ()
+simul = do
+  v <- await 
+  case v of
+   Left t -> waitFor t >> simul 
+   Right a -> yield a >> simul
 
 -- Remove duplicates values
 undup :: (Monad m, Eq a) => Pipe a a m ()

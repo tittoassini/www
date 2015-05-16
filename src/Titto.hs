@@ -1,60 +1,126 @@
+-- -*- mode:org;mode:haskell; -*-
 {-# LANGUAGE OverloadedStrings ,ScopedTypeVariables #-}
 
-import Pipes
+{-
+
+-}
+
+import           Pipes
 import qualified Pipes.Prelude as P
-import Pipes.Concurrent
-import Control.Concurrent.Async hiding (wait)
-import Control.Applicative
-import Control.Concurrent.STM.TVar as STM
-import Control.Monad
-import Data.Maybe
-import qualified Data.Text.Lazy as T
-import Data.Text.Lazy.Encoding
-import Quid2.Pipes
-import Quid2.Pipe.Finance
-import Quid2.Pipe.File
-import Quid2.Util.Voice
-import Quid2.Util.Time
-import Quid2.Util.Dir
-import Quid2.Util.Email(email,titto)
-import Quid2.Util.Service
+import           Pipes.Concurrent
+import           Control.Concurrent.Async hiding (wait)
+-- import           Control.Applicative
+import           Control.Concurrent.STM.TVar as STM
+-- import           Control.Monad
+-- import           Data.Maybe
+import qualified Data.Text.Lazy as TL
+import qualified           Data.Text.Lazy.Encoding as TL
+-- import           Data.Text.Encoding
+import qualified Data.Text as T
+import           Quid2.Pipes hiding (print,mapM,take,show,concat)
+import           Quid2.Pipe.Finance
+import           Quid2.Pipe.File
+import           Quid2.Util.Voice
+import           Quid2.Util.Time
+import           Quid2.Util.Dir
+import           Quid2.Util.Email(email,titto)
+import           Quid2.Util.Service
 import qualified Quid2.Pipe.GitHub as GH
-import Web.Scotty
-import Data.String
-import Network.Wai.Middleware.RequestLogger (logStdoutDev)
-import System.Log.Logger
-import System.Log.Handler.Simple
+import           Web.Scotty
+import           Data.String
+import           Network.Wai.Middleware.RequestLogger (logStdoutDev)
+import           System.Log.Logger
+import           System.Log.Handler.Simple
 -- import Text.Blaze.Html5
 -- import Text.Blaze.Html5.Attributes
+import           Data.Aeson
+import qualified Data.ByteString.Char8 as S8
+import           Data.Aeson.Types
+-- import qualified Data.ByteString.Lazy as L
+-- import           Data.List
+-- import           Data.Ord
+-- import qualified Network.Browser as N
+-- import qualified Network.HTTP as N
+-- import           Quid2.Util.String
+import           System.Directory
+import           System.FilePath
+import           Text.Blaze.Html.Renderer.Utf8 (renderHtml)
 import qualified Text.Blaze.Html5 as H
 import qualified Text.Blaze.Html5.Attributes as A
-import Text.Blaze.Html.Renderer.Utf8 (renderHtml)
-import System.FilePath
-import qualified Network.HTTP as N
-import qualified Network.Browser as N
-import Data.Aeson
-import Data.Aeson.Types
-import qualified Data.ByteString.Lazy as L
-import Data.List
-import Quid2.Util.String
-import System.Directory
+-- import qualified Text.Blaze.Renderer.Utf8 as H
+import Source.Salus(runSalus)
+import Network.Wai.Middleware.StaticHost
+import Network.Wai.Middleware.Autohead (autohead)
+import Network.Wai.Middleware.Gzip
+import Network.Wai.Middleware.AddHeaders
+-- import Network.Wai.Middleware.Routes.ContentTypes
 
 {-
+Distributed version:
+* Functions (lore, stock warnings) are indipendently deployed
+* Delivery of results (by email, web) are not hardwired
+
+Req:
+	      	* Keep under control system and finance events.
+                * Integrated WWW view
+ 		  * As most info is probably small is preferable to have a single page tree-like view also spanning multiple servers.
+                * Email warnings for important events/errors (system failure,stock limits)
+                * Upgradable objects (as for stocks, automatically updated on git update)
+                * Upgradable views (a js or haskell view handler per data type)
+                * API to post authorised updates to different channels
+                  * HTTP API (hubbub stype): POST /1 ... Value
+                  * Binary/Quid2 API:
+                  * subscription http://dweet.io/
+
+Browse quid2.
+
+Titto Service
+input topic "/titto/Warnings"
+
+Stock Warning Service:
+-- subscribe to relative "stockWarnings" ::Topic [(String,min,max)]
+-- process and continuosly send warnings on relative topic "warnings" and "errors"
+
+Salus Service:
+at startup:
+-- create endpoints for the two functions
+-- associate endpoint folder to lorenzo.ambri/casa/salus/clearData and getData.. in default register (127.0.0.1:..)
+
+To access the service, we just need to browse the central register.
+
+Updatable GitHub Document Service:
+
+Web Call Back Service:
+
+Runnable Services:
+
 TODO:
 -- remove tvar, use just accumulating pipe
 
-Distributed version.
-* Server that returns streams using SSE or long polling. 
-* How to add other js handlers?
+PROB: exits without apparent reason.
 
-PROB: If the data is incorrect it gets stuck and NO WARNINGS RECEIVED.
+PROB: GOT STUCK with no more events shown (maybe data was incorrect?)
+
+PROB: If the data is incorrect it gets stuck, freezes and NO WARNINGS RECEIVED.
 
 PROB: cannot run as a service as:
 -- email won't work as we cannot access secrets after switching to quid2-titto (SOL: read them while still root)
 -- propellor shell commands needed to clone git still wont' work (even after not closing file descriptors)
-SOL: start manually as (already done by propellor)
+
+SOL: start manually as (already done by propellor):
 killall -s SIGKILL quid2-titto; /root/.cabal/bin/quid2-titto > /dev/null 2>&1 &
 -}
+
+-- /titto/stockWarnings
+
+-- SalusData Address Address
+data SalusData = SalusData {clearData::IO()
+                           ,getDataAsCSV::IO String
+                           }
+
+-- data IOEndPoint = IOEndPoint []
+
+type Address = String
 
 -- t = runEffect $ fileValue 2 "/Users/titto/workspace/quid2-titto/stocks.hs") >->  >-> P.print
 
@@ -64,41 +130,6 @@ tt = runEffect $ stockBounds ("AAPL",66,70) >-> P.print
 b1 = [("AAPL",366,500)]
 b2 = [("unip.mi",2,4),("uni.mi",4.05,5),("mt.mi",1.5,2.3)]
 
-b3 = [("AAPL",60,80)
-     ,("XFFE.mi",121,126)
-     ,("xstr.mi",220,233)
-     ,("XBCT.MI",188,190)
-     ,("eue.mi",29.5,35)
-     ,("uti.mi",33.3,37)
-     ,("ener.mi",15,17)
-     ,("fmi.mi",25,37.5)
-     ,("ETFMIB.MI",20.5,22.7)
-     ,("grc.mi",1.63,2.15)
-     ,("lafri.mi",8.1,9)
-     ,("unip.mi",3.8,5.36),("uni.mi",3.9,5.8)
-     ,("mt.mi",2.2,2.7),("bp.mi",12.5,15),("ubi.mi",6,7.4)
-     ,("ana.mc",40,66)
-     ,("QFAL.MI",1000,1525)
-     ,("QFEI1.MI",550,800)
-     ,("QFIRS.MI",945,1150)
-     ,("QFOBE.MI",640,850)
-     ,("CD91.DE",14.8,25)
-     ,("UIMV.DE",4.5,8)
-      
-     ,("xuks.l",540,590)
-     ,("imib.l",750,1080)
-     ,("inrg.l",350,410)
-     ,("xfvt.l",1370,1953)
-      
-     ,("IEEM.MI",25,30)
-     ,("xmrc.mi",16,22)
-     ,("xx25.mi",16,23.5)
-     ,("BRZ.MI",28,40)
-     ,("ITKY.MI",21,28)
-     ,("PSP",11.1,12.5)
-     ,("PHAG.MI",13,22)
-     ]
-
 t = main
 
 x = email titto "quid2-titto" "just started"
@@ -106,7 +137,7 @@ x = email titto "quid2-titto" "just started"
 -- http://nano.quid2.org:8080/hook/repo/test/push
 
 serviceName = "quid2-titto"
-  
+
 main = initService serviceName setup
 
 setup :: Config () -> IO ()
@@ -114,7 +145,7 @@ setup cfg = do
   updateGlobalLogger rootLoggerName $ setLevel DEBUG -- INFO -- DEBUG
 
   email titto "quid2-titto" "just started"
-  
+
   reportMem <- STM.newTVarIO Nothing
 
   (userSeal,userOut) <- tittoMBox (pr reportMem)
@@ -129,42 +160,47 @@ setup cfg = do
 
   -- NOTE: use "root" as we are running as cmd and not a real service
   -- Every time we get a github update, rebuild checks
-  async $ runEffect $ githubUpdated >-> GH.fileValue "root" repoDir "tittoassini" "test" "master" "values/stocks" >-> updateChecksC userOut Nothing 
+  async $ runEffect $ githubUpdated >-> GH.fileValue "root" repoDir "tittoassini" "test" "master" "values/stocks" >-> updateChecksC userOut Nothing
 
   loreDir <- makeDir $ stateDir cfg </> "lore"
   let salusFile = loreDir </> "salus"
   runSalus salusFile
-  
+
   githubUpdatedTrigger
 
   serverReport <- do
     t <- timeDateTime
-    return . scottyHTML $ 
+    return . scottyHTML $
       H.docTypeHtml $ do
-        let h = fromString $ unwords ["Service",serviceName] 
+        let h = fromString $ unwords ["Service",serviceName]
         H.head $ do
           H.title h
         H.body $ do
           H.h1 h
           H.p $ fromString $ unwords ["Started up at",t]
 
+  -- Run web static sites
+  forkIO webServer
+
+
+  -- nano.quid2.org services
   scotty 8080 $ do
     middleware logStdoutDev
 
     get "/" $ html serverReport
-      
-    get "/report" $ do
-      report <- liftIO $ atomically $ STM.readTVar reportMem 
-      html . scottyHTML . reportAsHTML $ report 
 
-    get "/lore" $ html $ scottyHTML $ 
+    get "/report" $ do
+      report <- liftIO $ atomically $ STM.readTVar reportMem
+      html . scottyHTML . reportAsHTML $ report
+
+    get "/lore" $ html $ scottyHTML $
       H.docTypeHtml $ do
         let h = fromString $ "La roba ddi Lore"
         H.head $ do
           H.title h
         H.body $ do
           H.h1 h
-          H.ul $ do            
+          H.ul $ do
             H.li $ (H.a "get data as csv") H.! (A.href "/lore/view")
             H.li $ (H.a "clear data")      H.! (A.href "/lore/clear")
 
@@ -181,12 +217,15 @@ setup cfg = do
       action :: String <- param "action"
       liftIO $ githubUpdatedTrigger
       text ""
-      
+
+    -- /titto/plan return application files
+    -- ws:quid2.org:8000?? plan app connector
+
     where
       -- Send output by email and also save it for display on /report
       pr reportMem msg = do
         t <- timeDateTime
-        let tmsg = (t,msg) 
+        let tmsg = (t,msg)
         print tmsg
         email titto "stocks" msg
         -- say m
@@ -200,50 +239,45 @@ setup cfg = do
             msg $ "Error in stocks data: " ++ err
             updateChecksC userOut Nothing
           Right bounds -> do
-            msg "Updated stocks data"            
+            msg "Updated stocks data"
             -- liftIO $ maybe (return ()) atomically maybeSeal
             warnsSeal <- liftIO $ connectBounds userOut bounds
             updateChecksC userOut (Just warnsSeal)
         where msg = liftIO . atomically . send userOut
 
-s = salus "/tmp/lore" 
-s2 = runSalus "/tmp/lore"
+webServer = scotty 80 $ do
+              middleware $ gzip (gzipConf "/tmp") . autohead . (staticHost hosts nonStaticPrefixes) . addHeaders allowHeaders
 
-runSalus dir = async $ runEffect $ cronMinutes 5 >-> io_ (salus dir) >-> P.drain -- P.print -- drain
+hosts = [h "quid2.org"
+        ,h "kamus.it"
+        ,h "jslib.quicquid.org"
+        ,h "massimoassini.quicquid.org"
+        ,h "ska.quicquid.org"
+        ,h3 "finance.quicquid.org" "finance.quicquid.org" True
+        ,h3 "quid2.net"    "quid2.org" False
+        ,h3 "quicquid.org" "quid2.org" False
+     ] where
+    h n = h3 n n False
+    h3 n n2 b = Host {hostDomain=n,hostDir=T.concat [d,n2,"/web"],mutable=b}
+    d = "/Users/titto/workspace/" -- "/home/workspace/"
 
-salus dir = readSalus >>= writeSalus dir
+nonStaticPrefixes = [] -- ["/api","/auth"]
 
-readSalus :: IO (Maybe Salus)
-readSalus = do
-      (_, rsp) <- N.browse $ do
-        N.setAllowRedirects True
-        (_,devs) <- N.request (N.postRequestWithBody "http://salus-it500.com/public/login.php?lang=en" "application/x-www-form-urlencoded" "IDemail=lorenzo.ambri%40gmail.com&password=password&login=Login")
-        let Just token = (\b -> after "name=\"token\"" b >>= between "value=\"" "\"") . N.rspBody $ devs
+allowHeaders = [("Access-Control-Allow-Origin","*")
+               ,("Access-Control-Allow-Headers","Content-Type,Content-Length")
+               ]
 
-        N.request $ N.getRequest $ "http://salus-it500.com/public/ajax_device_values.php?devId=17517&token=" ++ token
-      let dt = encodeUtf8 . T.pack . N.rspBody $ rsp
-      -- print dt
-      return $ decode dt
+gzipConf tmpDir = def {
+  gzipFiles = GzipCacheFolder (tmpDir ++ "/warp")
+  ,gzipCheckMime = (\f -> S8.isPrefixOf "text/" f || f == typeOctet)
+  }
 
-writeSalus dir Nothing  = return ()
-writeSalus fs (Just s) = do
-  [d,t] <- words <$> timeDateTime
-  -- appendFile (fs </> "salus") 
-  appendFile fs $ intercalate "," ([d,let Just s = till "." t in s] ++ flds s) ++ "\r\n"
+typeOctet = "application/octet-stream"
 
-data Salus = Salus {flds::[String]} -- {temp1::Double,temp2::Double}
-           deriving Show
-
-instance FromJSON Salus where
-     parseJSON (Object v) = Salus <$> (mapM (v .:) salusFlds) -- <$> (read <$> v .: "CH1currentRoomTemp") <*> (read <$> v .: "CH2currentRoomTemp")
-     parseJSON _          = mzero
-
-salusFlds = ["CH1currentRoomTemp","CH1currentSetPoint","CH1autoOff","CH1manual","CH1schedType","CH1heatOnOffStatus","CH1autoMode","CH1heatOnOff","CH1frostActive","CH2currentRoomTemp","CH2currentSetPoint","CH2autoOff","CH2manual","CH2schedType","CH2heatOnOffStatus","CH2autoMode","CH2heatOnOff","CH2frostActive","HWmode","HWboost","HWschedType","HWonOffStatus","HWautoMode","esStatus","tempUnit"]
-
-scottyHTML = decodeUtf8 . renderHtml
+scottyHTML = TL.decodeUtf8 . renderHtml
 
 type Report = [(String,String)]
-  
+
 reportAsHTML :: Maybe Report -> H.Html
 reportAsHTML mr = H.docTypeHtml $ do
     H.head $ do
@@ -261,10 +295,10 @@ connectBounds userOut bounds = do
   return warnsSeal
 
 onBounds bounds = do
-  (output, input, seal) <- spawn' Unbounded
+  (output, input, seal) <- spawn' unbounded
 
   ts <- mapM (\b -> async (runEffect $ stockBounds b >-> toOutput output)) bounds
-  
+
   -- mapM_ wait (:ts)
   return (seal,input)
 
@@ -272,17 +306,16 @@ stockBounds :: (String, Double, Double) -> Producer String IO ()
 stockBounds (name,low,high) = quoteP name >-> P.filter (\(s,ev)-> either (const True) (\v -> v<=low || v >= high) ev) >-> P.map showQuote >-> undup
 
 showQuote (s,Left err) = unwords ["Stock",s,"'s value cannot be read:",take 100 $ show err]
-showQuote (s,Right v)  = unwords ["Stock",s,"has reached price",show v]                                                                
+showQuote (s,Right v)  = unwords ["Stock",s,"has reached price",show v]
 triggerMBox :: MonadIO m => IO (Producer () m (), IO Bool)
 triggerMBox = do
-  (output, input, seal) <- spawn' Unbounded
+  (output, input, seal) <- spawn' unbounded
   return (fromInput input,atomically $ send output ())
 
 tittoMBox :: (b -> IO ()) -> IO (STM (), Output b)
 tittoMBox pr = do
-  (output, input, seal) <- spawn' Unbounded
-  mbox <- async $ do runEffect $ fromInput input >-> for cat (liftIO . pr) -- >> 
+  (output, input, seal) <- spawn' unbounded
+  mbox <- async $ do runEffect $ fromInput input >-> for cat (liftIO . pr) -- >>
   return (seal,output) --  (mbox,output)
-           
 
--- printWarn = P.map (\(s,v) -> unwords ["Stock",s,"has reached price",show v]) >-> for cat (\m -> liftIO (print m >> say m)) -- P.print -- P.chain (print) 
+-- printWarn = P.map (\(s,v) -> unwords ["Stock",s,"has reached price",show v]) >-> for cat (\m -> liftIO (print m >> say m)) -- P.print -- P.chain (print)

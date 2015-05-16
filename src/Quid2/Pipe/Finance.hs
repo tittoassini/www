@@ -4,20 +4,16 @@ module Quid2.Pipe.Finance(
   ) where
 
 import Control.Applicative
-import Control.Monad
 import Control.Exception
 import Data.Maybe
 import qualified Data.Map as M
 import Data.Char
-import Pipes
-import qualified Pipes.Prelude as P
-import System.IO
 import Quid2.Util.Strict(strictTry)
 import Quid2.Util.String(after,between)
 import Quid2.Util.HTTP(getMime)
 import Quid2.Util.Time
-import Quid2.Pipes
-
+import Quid2.Pipes hiding (read,map,show,filter,mapM,print)
+import qualified Quid2.Pipes as P
 
 t :: IO ()
 t = runEffect $ stockCheckP ("mt.mi",">=",2) >-> P.print
