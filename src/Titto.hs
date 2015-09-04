@@ -1,6 +1,5 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE OverloadedStrings ,ScopedTypeVariables #-}
 -- -*- mode:org;mode:haskell; -*-
-{-# LANGUAGE ScopedTypeVariables #-}
 
 import           Pipes
 import qualified Pipes.Prelude as P
