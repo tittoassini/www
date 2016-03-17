@@ -272,6 +272,7 @@ scottyHTML = TL.decodeUtf8 . renderHtml
 
 type Report = [(String,String)]
 
+
 reportAsHTML :: Maybe Report -> H.Html
 reportAsHTML mr = H.docTypeHtml $ do
     H.head $ H.title "Events"
