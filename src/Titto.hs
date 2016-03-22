@@ -130,7 +130,7 @@ t = main
 
 x = email titto "quid2-titto" "just started"
 
--- http://nano.quid2.org:8080/hook/repo/test/push
+-- http://nano.quid2.org:9000/hook/repo/test/push
 
 serviceName = "quid2-titto"
 
@@ -178,7 +178,7 @@ setup cfg = do
   forkIO webServer
 
   -- nano.quid2.org services
-  scotty 8080 $ do
+  scotty 9000 $ do
     middleware logStdoutDev
 
     get "/" $ html serverReport
