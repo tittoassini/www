@@ -104,7 +104,7 @@ PROB: cannot run as a service as:
 -- propellor shell commands needed to clone git still wont' work (even after not closing file descriptors)
 
 SOL: start manually as (already done by propellor):
-killall -s SIGKILL quid2-titto; /root/.cabal/bin/quid2-titto > /dev/null 2>&1 &
+ killall -s SIGKILL quid2-titto; /root/.cabal/bin/quid2-titto > /dev/null 2>&1 &
 -}
 
 -- /titto/stockWarnings
@@ -240,7 +240,7 @@ setup cfg = do
 
 webServer = scotty 80 $ middleware $ gzip (gzipConf "/tmp") . autohead . staticHost hosts nonStaticPrefixes . addHeaders allowHeaders
 
-hosts = [h "quid2.org"
+hosts = [h2 "quid2.org"
         ,h "kamus.it"
         ,h "jslib.quicquid.org"
         ,h "massimoassini.quicquid.org"
@@ -252,6 +252,7 @@ hosts = [h "quid2.org"
         ,h3 "quicquid.org" "quid2.org" False
      ] where
     h n = h3 n n False
+    h2 n = h3 n n True
     h3 n n2 b = Host {hostDomain=n,hostDir=T.concat [d,n2,"/web"],mutable=b}
     d = "/root/repo/workspace/" -- "/Users/titto/workspace/" -- "/home/workspace/"
 
