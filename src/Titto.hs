@@ -264,7 +264,8 @@ allowHeaders = [("Access-Control-Allow-Origin","*")
 
 gzipConf tmpDir = def {
   gzipFiles = GzipCacheFolder (tmpDir ++ "/warp")
-  ,gzipCheckMime = \f -> S8.isPrefixOf "text/" f || f == typeOctet
+  --,gzipCheckMime = \f -> S8.isPrefixOf "text/" f || f == typeOctet 
+  ,gzipCheckMime = \f ->  defaultCheckMime f || f == typeOctet
   }
 
 typeOctet = "application/octet-stream"
