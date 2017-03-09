@@ -18,6 +18,13 @@ cabal-version:       >=1.8
 
 executable quid2-titto
   main-is: Titto.hs
+  other-modules:
+        Network.Wai.Middleware.StaticHost
+        Quid2.Pipe.File
+        Quid2.Pipe.Finance
+        Quid2.Pipe.GitHub
+        Quid2.Pipes
+        Source.Salus
   Hs-Source-Dirs:  src
   build-depends: HTTP >=4000.2
                , HaskellNet
@@ -36,11 +43,11 @@ executable quid2-titto
                , http-types >= 0.8.6
                , mime-types >= 0.1.0.6
                , old-locale >=1.0
-               , pipes-concurrency==2.0.2
+               , pipes-concurrency
+               -- ==2.0.2
                , pipes>=4.1.2
                , process >=1.1
                , propellor == 0.7.0.11
-               , quid2-util
                , random >=1.0
                , scotty>=0.7.2
                , stm
@@ -51,9 +58,14 @@ executable quid2-titto
                , wai >= 3.0.2.3
                , wai-extra
                , wai-app-static
-               --, conduit-extra >= 1.1.7.3
+               , quid2-util
   ghc-options: -threaded
 
+-- executable quid2-warn
+--  main-is:             ovh.hs
+--  hs-source-dirs: src
+--  default-language:    Haskell2010
+--  build-depends:  AppleScript >= 0.1.5, MissingH, aeson >= 0.9.0.1, base, bytestring, conduit, deepseq, enclosed-exceptions >= 1.0.1.1, http-conduit, http-types >= 0.9, mime-mail, old-time, quid2-util, smtps-gmail, time >= 1.5.0.1, transformers, unordered-containers >= 0.2.5.1, utf8-string >= 1.0.1.1
 
 -- executable quid2-bridge
 --   main-is: Bridge.hs

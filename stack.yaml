@@ -1,0 +1,19 @@
+resolver: lts-6.30
+
+packages:
+- .
+#- ../../.propellor
+- location:
+    git: https://github.com/tittoassini/propellor
+    commit: 55ced769f1255dabfdaf99c2e09a154125346bc7
+  extra-dep: true
+
+#- ../quid2-util
+- location:
+    git: https://github.com/tittoassini/quid2-util
+    commit: 89e65beebd5c2bbac5e351b070359c5c3b1be413
+  extra-dep: true
+# - ../EXTERNAL/haskell-AppleScript
+
+extra-deps:
+- smtps-gmail-1.3.2
