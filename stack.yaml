@@ -11,7 +11,7 @@ packages:
 #- ../quid2-util
 - location:
     git: https://github.com/tittoassini/quid2-util
-    commit: 89e65beebd5c2bbac5e351b070359c5c3b1be413
+    commit: 1bdeb701ade129ff3aa3f15d1a4c81e321c5103d 
   extra-dep: true
 # - ../EXTERNAL/haskell-AppleScript
 
