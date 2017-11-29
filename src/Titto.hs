@@ -105,6 +105,9 @@ PROB: cannot run as a service as:
 
 SOL: start manually as (already done by propellor):
  killall -s SIGKILL quid2-titto; /root/.cabal/bin/quid2-titto > /dev/null 2>&1 &
+
+better: run in a screen session
+
 -}
 
 -- /titto/stockWarnings
@@ -160,7 +163,8 @@ setup cfg = do
 
   loreDir <- makeDir $ stateDir cfg </> "lore"
   let salusFile = loreDir </> "salus"
-  runSalus salusFile
+  -- DISABLED
+  -- runSalus salusFile
 
   githubUpdatedTrigger
 
@@ -187,6 +191,7 @@ setup cfg = do
       report <- liftIO $ atomically $ STM.readTVar reportMem
       html . scottyHTML . reportAsHTML $ report
 
+    -- ! NOT WORKING
     get "/lore" $ html $ scottyHTML $
       H.docTypeHtml $ do
         let h = fromString "La roba ddi Lore"
