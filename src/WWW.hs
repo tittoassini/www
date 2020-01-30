@@ -50,7 +50,7 @@ setup cfg = do
 
 httpServer =
     middleware
-        $ gzip (def { gzipFiles = GzipCacheFolder "/tmp" })
+        $ gzip (def { gzipFiles = GzipCacheFolder "/tmp/www" })
         . autohead
         . staticHost hosts nonStaticPrefixes
         . addHeaders allowHeaders
