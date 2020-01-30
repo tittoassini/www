@@ -1,19 +1,35 @@
-resolver: lts-6.30
+#resolver: lts-6.30
+resolver: lts-14.22
 
 packages:
-- .
+  - .
+# #- ../../.propellor
+# - location:
+#     git: https://github.com/tittoassini/propellor
+#     commit: 55ced769f1255dabfdaf99c2e09a154125346bc7
+#   extra-dep: true
+
+# #- ../quid2-util
+# - location:
+#     git: https://github.com/tittoassini/quid2-util
+#     commit: 1bdeb701ade129ff3aa3f15d1a4c81e321c5103d
+#   extra-dep: true
+# # - ../EXTERNAL/haskell-AppleScript
+
+#allow-newer: true
+
+# extra-deps:
+#   - smtps-gmail-1.3.2
 #- ../../.propellor
-- location:
-    git: https://github.com/tittoassini/propellor
-    commit: 55ced769f1255dabfdaf99c2e09a154125346bc7
-  extra-dep: true
-
+# - git: https://github.com/tittoassini/propellor
+#   commit: 55ced769f1255dabfdaf99c2e09a154125346bc7
 #- ../quid2-util
-- location:
-    git: https://github.com/tittoassini/quid2-util
-    commit: 1bdeb701ade129ff3aa3f15d1a4c81e321c5103d 
-  extra-dep: true
+# - git: https://github.com/tittoassini/quid2-util
+#   commit: 1bdeb701ade129ff3aa3f15d1a4c81e321c5103d
 # - ../EXTERNAL/haskell-AppleScript
-
-extra-deps:
-- smtps-gmail-1.3.2
+# - HaskellNet-0.5.1@sha256:53f2cfffb140740691296f905a70143c859b571eea3f5cf5f7a4642851d9e38a,1584
+# - HaskellNet-SSL-0.3.4.1@sha256:3ca14dd69460a380cf69aed40654fb10c4c03e344632b6a9986568c87feda157,1843
+# - IfElse-0.85@sha256:6939b94acc6a55f545f63a168a349dd2fbe4b9a7cca73bf60282db5cc6aa47d2,445
+# - MonadCatchIO-transformers-0.3.1.3@sha256:468a6f12fd3821d2ab6301cc3543930c05e5117118917c6857ea383bdcc96c54,1127
+# - scotty-tls-0.4.1@sha256:3eea55183b06e48f3c8407131ebd79d70515a2bd1825d5334f76eeace95f8f69,1000
+# - tls-1.5.3
