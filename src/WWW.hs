@@ -32,19 +32,21 @@ main = initService serviceName setup
 setup :: Config () -> IO ()
 setup cfg = do
     updateGlobalLogger rootLoggerName $ setLevel DEBUG -- INFO -- DEBUG
+
+    forkIO $ scotty 8080 httpServer
+
+    app <- scottyApp httpServer
+    let appDev = logStdoutDev app
+
+    -- app <- scottyApp $      get "/" (text "hello")
+
     let tlsConfig = tlsSettings
             "/etc/letsencrypt/live/quid2.org/fullchain.pem"
             "/etc/letsencrypt/live/quid2.org/privkey.pem"
         config = setPort 443 defaultSettings
 
-    forkIO $ scotty 8080 httpServer
+    runTLS tlsConfig config appDev
 
-    scottyApp httpServer
-
-    waiApp <- scottyApp $ do
-        get "/"      (text "hello")
-        get "/hello" (text "hello again")
-    runTLS tlsConfig config (logStdoutDev waiApp)
 
 httpServer =
     middleware
