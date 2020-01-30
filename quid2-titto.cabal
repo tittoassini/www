@@ -18,10 +18,9 @@ cabal-version:       >=1.8
 
 executable www
   main-is: WWW.hs
-  other-modules: Quid2.Util.Service
-  -- Network.Wai.Middleware.StaticHost
+  other-modules: Quid2.Util.Service,Network.Wai.Middleware.StaticHost
   Hs-Source-Dirs:  src
-  build-depends: warp-tls,wai-extra, scotty,warp,base, hslogger,unix,filepath,hdaemonize,directory,time,filelock,temporary
+  build-depends: warp-tls,wai-extra, scotty,warp,base, hslogger,unix,filepath,hdaemonize,directory,time,filelock,temporary,wai-app-static,http-types,mime-types,text,bytestring,case-insensitive,wai
   ghc-options: -threaded
 
 -- executable quid2-titto
