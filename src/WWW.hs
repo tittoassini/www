@@ -33,7 +33,7 @@ setup :: Config () -> IO ()
 setup cfg = do
     updateGlobalLogger rootLoggerName $ setLevel DEBUG -- INFO -- DEBUG
 
-    forkIO $ scotty 8080 httpServer
+    forkIO $ scotty 80 httpServer
 
     app <- scottyApp httpServer
     let appDev = logStdoutDev app
