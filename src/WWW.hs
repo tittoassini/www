@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Main where
 
@@ -16,11 +17,19 @@ import           Network.Wai.Middleware.AddHeaders
 import qualified Data.Text as T
 import           Control.Concurrent (forkIO)
 import           System.FilePath
-
+import GitHash
 -- import           Web.Scotty.TLS
-main :: IO ()
+
+
+-- TODO:  move in tapp
+versionID :: String 
+versionID = concat [giBranch gi, "@", giHash gi, " (", giCommitDate gi, ")"]
+  where
+        gi = $$tGitInfoCwd
+
 serviceName = "www"
 
+main :: IO ()
 main = initService serviceName setup
 
 httpPort = 80
@@ -32,6 +41,7 @@ httpsPort = 443
 setup :: Config () -> IO ()
 setup cfg = do
   updateGlobalLogger rootLoggerName $ setLevel DEBUG -- INFO -- DEBUG
+  putStrLn $ unwords [serviceName,"version:",versionID]
   forkIO $ scotty httpPort httpServer
   app <- scottyApp httpServer
   let appDev = logStdoutDev app
