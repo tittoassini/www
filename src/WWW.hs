@@ -23,16 +23,20 @@ serviceName = "www"
 
 main = initService serviceName setup
 
+httpPort = 8080
+
+httpsPort = 4430
+
 setup :: Config () -> IO ()
 setup cfg = do
   updateGlobalLogger rootLoggerName $ setLevel DEBUG -- INFO -- DEBUG
-  forkIO $ scotty 8080 httpServer
+  forkIO $ scotty httpPort httpServer
   app <- scottyApp httpServer
   let appDev = logStdoutDev app
   -- app <- scottyApp $      get "/" (text "hello")
   let tlsConfig =
         tlsSettings (certFile "fullchain.pem") (certFile "privkey.pem")
-      config = setPort 443 defaultSettings
+      config = setPort httpsPort defaultSettings
   runTLS tlsConfig config appDev
 
 certFile = (certDir </>)
