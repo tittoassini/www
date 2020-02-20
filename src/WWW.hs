@@ -23,10 +23,12 @@ serviceName = "www"
 
 main = initService serviceName setup
 
-httpPort = 8080
+httpPort = 80
 
-httpsPort = 4430
+httpsPort = 443
 
+-- httpPort = 8080
+-- httpsPort = 4430
 setup :: Config () -> IO ()
 setup cfg = do
   updateGlobalLogger rootLoggerName $ setLevel DEBUG -- INFO -- DEBUG
