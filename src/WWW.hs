@@ -23,7 +23,8 @@ import GitHash
 
 -- TODO:  move in tapp
 versionID :: String 
-versionID = concat [giBranch gi, "@", giHash gi, " (", giCommitDate gi, ")"]
+-- versionID = concat [giBranch gi, "@", giHash gi, " (", giCommitDate gi, ")"]
+versionID = concat [giHash gi, " (", giCommitDate gi, ")"]
   where
         gi = $$tGitInfoCwd
 
