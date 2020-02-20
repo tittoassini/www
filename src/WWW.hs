@@ -41,7 +41,7 @@ httpsPort = 443
 setup :: Config () -> IO ()
 setup cfg = do
   updateGlobalLogger rootLoggerName $ setLevel DEBUG -- INFO -- DEBUG
-  putStrLn $ unwords [serviceName,"version:",versionID]
+  warningM "Main" $ unwords ["Started:",serviceName,"Version:",versionID]
   forkIO $ scotty httpPort httpServer
   app <- scottyApp httpServer
   let appDev = logStdoutDev app
