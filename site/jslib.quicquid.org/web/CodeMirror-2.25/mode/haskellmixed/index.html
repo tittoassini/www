@@ -1,0 +1,44 @@
+<!doctype html>
+<html>
+  <head>
+    <title>CodeMirror: HTML mixed mode</title>
+    <link rel="stylesheet" href="../../lib/codemirror.css">
+    <script src="../../lib/codemirror.js"></script>
+    <script src="../xml/xml.js"></script>
+    <script src="../javascript/javascript.js"></script>
+    <script src="../css/css.js"></script>
+    <script src="../haskell/haskell.js"></script>
+    <script src="mixed.js"></script>
+    <link rel="stylesheet" href="../../doc/docs.css">
+    <style>.CodeMirror {border-top: 1px solid black; border-bottom: 1px solid black;}</style>
+  </head>
+
+  <body>
+    <h1>CodeMirror: Haskell mixed mode</h1>
+
+    <form><textarea id="code" name="code">
+
+module Subject.Quid2 where
+
+import Base
+import Service.Org.Quid2.App
+
+snow = snowflake
+
+fib11 = (take 11 fibonacci)::[Int]
+
+
+mdlSubjectQuid2ForHaskellers = appModule "Subject.Quid2.ForHaskellers"
+{-
+      function jsFunc(arg1, arg2) {
+        if (arg1 && arg2) document.body.innerHTML = "achoo";
+      }
+-}
+
+
+</textarea></form>
+    <script>
+      var editor = CodeMirror.fromTextArea(document.getElementById("code"), {mode: "text/x-haskell-mixed", tabMode: "indent"});
+    </script>
+  </body>
+</html>

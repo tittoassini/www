@@ -1,0 +1,3 @@
+#! /bin/bash
+# --delete
+rsync -avz /home/titto/workspace/massimoassini.quicquid.org root@quid2.org:/home/www/sites

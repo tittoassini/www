@@ -1,0 +1,2 @@
+#! /bin/bash
+darcs push -v root@quid2.org:/home/www/sites/ska.quicquid.org

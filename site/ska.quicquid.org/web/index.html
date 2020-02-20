@@ -1,0 +1,63 @@
+<HTML>
+<HEAD>
+<script src="p2h.js"></script>
+
+<script>
+var pageName = "ska.html";
+var pageTitle = "Principles and Patterns of Social Knowledge Applications";
+
+// The section to display, if any, is specified by adding a hash after the page URL (#section_name)
+function setPage() {
+  // IE and Opera pass the hash as entered, Firefox unescapes it first :-(
+  // alert("hash="+location.hash);
+  viewIt(decodeURIComponent(location.hash.substring(1)));
+}
+
+function viewIt(public_id) {
+  var url = pageName;
+  var title = pageTitle;
+  
+  if (public_id) {
+      var internal_id = p2h[public_id];
+      url += "#" + internal_id;
+      self.location.hash = encodeURIComponent(public_id);
+      //title = decodeURIComponent(id.substring(1)).replace(/\+/g," ").replace(/\|/g,"-") + " @ " + title;
+      title = public_id.replace(/\|/g,"-") + " @ " + title;
+  }
+  
+  self.pageFrame.location.href=url;  
+  document.title=title ;	   
+}
+
+</script>
+
+</HEAD>
+
+<FRAMESET onLoad="setPage()" cols="25%,*">
+
+	<FRAME src="toc.html" name="tocFrame">
+
+	<FRAMESET rows="*,40">
+		<FRAME src="ska.html" id="pageFrame" name="pageFrame">
+		<FRAME src="bottom.html" name="bottomFrame">
+	</FRAMESET>
+
+</FRAMESET>
+
+<NOFRAMES>
+<H2>Frame Alert</H2>
+
+<P>This document is designed to be viewed using frames. If you see this
+message, you are using a non-frame-capable web client. <BR>
+
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+var pageTracker = _gat._getTracker("UA-3991488-2");
+pageTracker._initData();
+pageTracker._trackPageview();
+</script>
+
+</HTML>

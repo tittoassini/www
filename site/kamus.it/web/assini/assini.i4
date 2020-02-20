@@ -1,0 +1,77 @@
+divert(-1)
+
+/* Multi Language Handling */
+define(LANG1,{en})
+
+define(TITTO,{<a href="directory.html#titto">Titto</a>})
+
+define(GIGGINO,{<a href="directory.html#giggino">Luigi - Regine Bout&eacute;g&egrave;ge</a>})
+
+define(CLAUDIA,{<a href="directory.html#claudia">Claudia</a>})
+
+define(FERNANDO,{<a href="directory.html#fernando">Fernando Assini</a>})
+
+define(LUIZ_PEDROZA,{<a href="directory.html#luiz_pedroza">Luiz Pedroza</a>})
+
+define(JOHN_ERIC,{<a href="directory.html#johne">John Eric</a>})
+
+define(RENATO,{<a href="directory.html#renato">Renato G.</a>})
+
+define(ROBERT,{<a href="directory.html#robert">Robert</a>})
+
+define(MARK,{<a href="directory.html#mark">Mark Assini</a>})
+
+define(JOSE,{<a href="directory.html#jose_perdomo">Jos&egrave; Assini Perdomo</a>})
+
+define(JOSE_VIEW,{<a href="views.html#jose_perdomo">Jos&egrave;}}s Point of View</a>})
+
+define(SECTION,{<hr><h1>$1</h1>})
+
+define(THE_TITLE,
+{<html>
+<head>
+<title>$1</title>
+</head>
+<body $2>
+<center>
+<h1>$1</h1>
+</center>
+})
+
+define(TITLE,{THE_TITLE($1,BGCOLOR="#ffffff" TEXT="#4f4f2f")})
+
+
+define(C_ITA,{bgcolor="green"})
+define(C_UK,{bgcolor="brown"})
+define(C_USA,{bgcolor="white"})
+define(C_BRA,{bgcolor="yellow"})
+define(C_EMI,{bgcolor="red"})
+define(C_ARG,{bgcolor="magenta"})
+
+define(SIGNATURE,
+{<hr size=2>
+<center>
+<font size=-1>
+PAGE_REFS(11 month_name(11) 1996)
+<br>Send your comments to <a href="mailto:titto@kamus.it">Titto</a>
+</font>
+</center>
+BASIC_END
+})
+
+define(MENU,
+{<hr>
+<center>
+ifelse($1,HOME,_Home_,<a href="index.html">[Home]</a>)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ifelse($1,FAQ,_FAQ_,<a href="faq.html">[FAQ]</a>)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ifelse($1,TREE,_Tree_,<a href="tree.html">[Tree]</a>)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ifelse($1,DIRECTORY,_Directory_,<a href="directory.html">[Directory]</a>)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ifelse($1,VIEWS,_Views_,<a href="views.html">[Views]</a>)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</center>
+})
+
+define(START, {TITLE($2) MENU($1)<hr>})
+define(START_GREY, {THE_TITLE($2) MENU($1)<hr>})
+define(END,   {MENU($1) SIGNATURE })
+
+divert(0)

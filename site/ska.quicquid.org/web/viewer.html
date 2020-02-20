@@ -1,0 +1,152 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+<title>The Collective Intelligence Wiki</title>
+
+<!--
+Viewer used to add versioning and editing functionality to plain versioned repository pages.
+
+It takes two parameters:
+doc = the name of the document to display without suffix, e.g. "Introduction", if missing "Introduction" is assumed.
+
+version = the number of the version to display, if missing the latest version is assumed. [BUG: not supported] 
+
+It will replace all relative links to use this same viewer. 
+-->
+
+<script type="text/javascript" src="http://quicquid.org/jslib/Request.js"></script>
+
+<script type="text/javascript" src="http://quicquid.org/jslib/output.js"></script>
+
+<script type="text/javascript" src="http://quicquid.org/jslib/String.js"></script>
+
+<script type="text/javascript" src="http://quicquid.org/jslib/inheritance.js"></script>
+
+<script type="text/javascript" src="http://quicquid.org/jslib/api.js"></script>
+
+</head>
+
+<script>
+
+var serverURL = "http://collective-intelligence.quicquid.org";
+
+var wikiURL = serverURL + "/wiki/";
+
+//function viewLink() {
+
+//var xx=0;
+
+/** Modify all references to other pages on this same wiki site so that they are also displayed using this viewer **/
+function fixReferences() {
+	for (var l=0;l<document.links.length;l++) {
+      var link = document.links[l];
+
+      if (link.className == "generated") continue;
+
+      var i = link.href.indexOf(wikiURL+"#");
+      if (i!=-1) {
+           //if (xx++==0) alert("'"+link.href+"'");
+           link.href = request.getURL() + link.href.substring(wikiURL.length);
+           continue;
+      }
+
+      link.href = link.href.replace(wikiURL,serverURL + "/viewer.html?doc=").replace(".doc","");
+      link.target="pageFrame";
+    }
+}
+
+function printVersions(result) {
+    
+    var html="" 
+
+    var versions = result.versions; 
+    if (versions.length>0) {
+
+      html += "<p><table border=1><caption>You can also view and edit a previous version of this page:</caption><tr><th>Author <th>Created on <th>Link";
+      for (var i = versions.length-1;i>=0;i--) {
+         v = versions[i];
+         var isLatest = (i==versions.length-1);
+         html+="<tr><td>"+v.creatorId+"<td>"+v.created+"<td><a class=generated href="+url+".doc"+ (isLatest ? "" : "?m=version&version="+(i+1) )+">"
+            +(isLatest ? "latest version"  : "version "+(i+1))
+            +"</a>";  
+      }
+      html+="</table>";
+    }
+
+    out(html);
+}
+
+function removeSuffix(name) {return name.substring(0,name.length-4);}
+
+function printRecentVersions(result) {
+    
+    var html="" 
+
+    var versions = result.versions; 
+    if (versions.length>0) {
+
+      html += "<p><table border=1><caption>Recent changes for the whole Wiki site:</caption><tr><th>Page <th>Author <th>Created on <th>Link";
+      for (var i=0;i<versions.length;i++) {
+         v = versions[i];
+         var shortName = removeSuffix(v.name);
+         html+="<tr><td><a class=generated href="+serverURL + "/viewer.html?doc="+encodeURIComponent(shortName)+">"+shortName+"</a>"
+            +"<td>"+v.creatorId+"<td>"+v.created
+            +"<td><a class=generated href="+encodeURIComponent(v.name)+"?m=version&version="   
+            + v.versionNumber+">"
+            + "version "+v.versionNumber
+            +"</a>";  
+      }
+      html+="</table>";
+    }
+
+    out(html);
+}
+
+function printContent(result) {
+    
+    var html= result.content + "<hr>";    
+
+    html += '<p>First time here? Start from the <a target="_top" class=generated href=http://collective-intelligence.quicquid.org/>home page</a>.';
+
+    html += "<p>You can <a class=generated href="+url+".doc>view and edit</a> this page in Microsoft Word."
+
+    html += '<p align=center><a rel="license" href="http://creativecommons.org/licenses/by/2.5/"><img src="http://creativecommons.org/images/public/somerights20.png" width="88" height="31" alt="Creative Commons License" style="border:none" /></a><br/>Except where otherwise noted, this site is<br/>licensed under a <a rel="license" href="http://creativecommons.org/licenses/by/2.5/">Creative Commons Attribution 2.5 License</a></p>';
+    out(html);
+}
+
+
+var url = request.arg.doc;
+//alert("Doc="+url);
+//if (! url) url = "Table of Contents"; 
+
+url = wikiURL + encodeURIComponent(url);
+
+//alert("url is: "+url);
+
+// Note: we rely on these queries to be executed in submission order
+new RemoteObj(url+".html").performQuery("content",printContent);
+new RemoteObj(wikiURL).performQuery("getRecentVersions('.doc',0,5) as versions.n*.(name|created|creatorId|versionNumber)",printRecentVersions);
+new RemoteObj(url+".doc").performQuery("versions.n*.(created|creatorId)",printVersions);
+
+</script>
+<!--
+<rdf:RDF xmlns="http://web.resource.org/cc/"
+    xmlns:dc="http://purl.org/dc/elements/1.1/"
+    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+<Work rdf:about="">
+<license rdf:resource="http://creativecommons.org/licenses/by/2.5/" />
+</Work>
+<License rdf:about="http://creativecommons.org/licenses/by/2.5/">
+   <requires rdf:resource="http://web.resource.org/cc/Attribution" />
+   <permits rdf:resource="http://web.resource.org/cc/Reproduction" />
+   <permits rdf:resource="http://web.resource.org/cc/Distribution" />
+   <permits rdf:resource="http://web.resource.org/cc/DerivativeWorks" />
+   <requires rdf:resource="http://web.resource.org/cc/Notice" />
+</License>
+</rdf:RDF>
+-->
+<body onload="fixReferences()">
+
+</body>
+</html>

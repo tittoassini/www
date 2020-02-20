@@ -1,0 +1,42 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<title>Request.js Test</title>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+
+<script src="junit.js"></script>
+<script src="Request.js"></script>
+
+<script> 
+if (location.search=="") {
+  location.href="RequestTest.html#some?search=a+term&param2=33";
+} else {
+try {
+  //assertEquals("http",request.protocol);
+  //assertEquals("quicquid.org",request.host);
+  //assertEquals("/jslib/",request.dir);
+  //assertEquals("RequestTest.html",request.page);
+  //assertEquals("#some",request.hash);  
+  
+  assertEquals("a term",request.arg.search);
+  assertEquals('33',request.arg.param2);
+  
+  //assertEquals(location,request.getURL());
+  
+  request.page="viewer.html";
+  assertEquals(location,request.getURL());
+  
+  document.write("Test Passed");
+ } catch (ex) {
+   document.write(ex);
+ } 
+}
+</script>
+</head>
+
+<body>
+
+<a name=some></a>
+
+</body>
+</html>

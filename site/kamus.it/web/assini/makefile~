@@ -1,0 +1,36 @@
+# Assini's site makefile
+
+#include /etc/kamus.mak
+
+ROOT=/home/titto/root
+
+include $(ROOT)/dev/conf/prehtml.mak
+
+LOCAL_LIB=assini.i4
+PRE=http://www.kamus.it/assini/
+SUF=html
+
+LANG=en
+LANG_SUF=
+
+SRCS = index.m4 directory.m4 faq.m4 views.m4 tree.m4 
+OBJS=$(SRCS:.m4=$(LANG_SUF).$(SUF))
+
+
+all: $(OBJS)
+	cat index$(LANG_SUF).$(SUF)
+
+
+include $(ROOT)/dev/conf/posthtml.mak
+
+
+
+
+
+
+
+
+
+
+
+

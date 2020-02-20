@@ -1,0 +1,53 @@
+8
+
+dir
+22529
+https://svn.csail.mit.edu/dig/2005/ajar/ajaw/js/misc
+https://svn.csail.mit.edu/dig
+
+
+
+2008-02-02T22:00:25.084703Z
+11923
+kennyluck
+
+
+svn:special svn:externals svn:needs-lock
+
+
+
+
+
+
+
+
+
+
+
+ee5100c3-270b-0410-b6b6-ca9d7ce675ca
+
+javascript2rdf.js
+file
+
+
+
+
+2008-05-15T08:38:23.000000Z
+d7f6d2b7ad18988715d650c90ee5b87f
+2007-07-06T15:30:25.259066Z
+3321
+kennyluck
+has-props
+
+temp.js
+file
+
+
+
+
+2008-05-15T08:38:23.000000Z
+e969c9682f0f27ff20df4c751f22a85b
+2008-02-02T22:00:25.084703Z
+11923
+kennyluck
+
