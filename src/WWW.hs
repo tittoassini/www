@@ -18,6 +18,7 @@ import qualified Data.Text as T
 import           Control.Concurrent (forkIO)
 import           System.FilePath
 import GitHash
+import System.Posix.Daemonize
 -- import           Web.Scotty.TLS
 
 
@@ -31,7 +32,11 @@ versionID = concat [giHash gi, " (", giCommitDate gi, ")"]
 serviceName = "www"
 
 main :: IO ()
-main = initService serviceName setup
+-- main = initService serviceName setup
+
+main = do
+  print "one"
+  daemonize main_
 
 httpPort = 80
 
@@ -39,8 +44,10 @@ httpsPort = 443
 
 -- httpPort = 8080
 -- httpsPort = 4430
-setup :: Config () -> IO ()
-setup cfg = do
+-- setup :: Config () -> IO ()
+-- setup _ = do
+main_ = do  
+  print "main"
   updateGlobalLogger rootLoggerName $ setLevel DEBUG -- INFO -- DEBUG
   warningM "Main" $ unwords ["Started:",serviceName,"Version:",versionID]
   forkIO $ scotty httpPort httpServer
