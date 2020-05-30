@@ -57,6 +57,7 @@ main = do
   updateGlobalLogger rootLoggerName $ setLevel DEBUG -- INFO -- DEBUG
   requireFile certChain
   requireFile certKey
+  removeTempDir
   warningM "Main" $ unwords ["Started:", serviceName, "Version:", versionID]
   forkIO $ scotty httpPort httpServer
   app <- scottyApp httpServer
@@ -65,6 +66,12 @@ main = do
   let tlsConfig = tlsSettings certChain certKey
       config    = setPort httpsPort defaultSettings
   runTLS tlsConfig config appDev
+
+removeTempDir = do
+  exists <- doesFileExist tempDir
+  when (exists) $ removeDirectoryRecursive tempDir
+
+tempDir = "/tmp/www"
 
 requireFile fs = do
   exists <- doesFileExist fs
@@ -80,7 +87,7 @@ certDir = "./private/certbot/quid2.org"
 -- certDir = "/etc/letsencrypt/live"
 httpServer =
   middleware
-    $ gzip (def { gzipFiles = GzipCacheFolder "/tmp/www" })
+    $ gzip (def { gzipFiles = GzipCacheFolder tempDir })
     . autohead
     . staticHost hosts nonStaticPrefixes
     . addHeaders allowHeaders
