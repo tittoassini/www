@@ -59,10 +59,12 @@ main = do
   app <- scottyApp httpServer
   let appDev = logStdoutDev app
   -- app <- scottyApp $      get "/" (text "hello")
-  let tlsConfig =
-        tlsSettings (certFile "fullchain.pem") (certFile "privkey.pem")
-      config = setPort httpsPort defaultSettings
+  let tlsConfig = tlsSettings certChain certKey
+      config    = setPort httpsPort defaultSettings
   runTLS tlsConfig config appDev
+
+certChain = certFile "fullchain.pem"
+certKey = certFile "privkey.pem"
 
 certFile = (certDir </>)
 
