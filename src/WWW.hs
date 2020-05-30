@@ -26,7 +26,8 @@ import           System.FilePath
 import           GitHash
 import           System.Posix.Daemonize
 -- import           Web.Scotty.TLS
-
+import           System.Directory
+import           Control.Monad
 
 -- TODO:  move in tapp
 versionID :: String
@@ -53,8 +54,9 @@ serviceName = "www"
 
 main :: IO ()
 main = do
-  print "main"
   updateGlobalLogger rootLoggerName $ setLevel DEBUG -- INFO -- DEBUG
+  requireFile certChain
+  requireFile certKey
   warningM "Main" $ unwords ["Started:", serviceName, "Version:", versionID]
   forkIO $ scotty httpPort httpServer
   app <- scottyApp httpServer
@@ -63,6 +65,10 @@ main = do
   let tlsConfig = tlsSettings certChain certKey
       config    = setPort httpsPort defaultSettings
   runTLS tlsConfig config appDev
+
+requireFile fs = do
+  exists <- doesFileExist fs
+  when (not exists) $ error (unwords $ ["file", fs, "does not exists"])
 
 certChain = certFile "fullchain.pem"
 certKey = certFile "privkey.pem"
