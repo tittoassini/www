@@ -34,9 +34,6 @@ versionID :: String
 versionID = concat [giHash gi, " (", giCommitDate gi, ")"]
   where gi = $$tGitInfoCwd
 
-serviceName = "www"
-
-main :: IO ()
 -- main = initService serviceName setup
 
 -- main = do
@@ -51,6 +48,10 @@ httpsPort = 443
 -- httpsPort = 4430
 -- setup :: Config () -> IO ()
 -- setup _ = do
+
+serviceName = "www"
+
+main :: IO ()
 main = do
   print "main"
   updateGlobalLogger rootLoggerName $ setLevel DEBUG -- INFO -- DEBUG
