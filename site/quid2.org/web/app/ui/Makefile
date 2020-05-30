@@ -1,3 +1,3 @@
 PROJECT:=ui
-include $(PROJ_DIR)../makefile.common
+include $(PROJ_DIR)../Makefile
 
