@@ -1,0 +1,11 @@
+deploy_path: "/home/ubuntu/app/www"
+repo: "https://github.com/tittoassini/www"
+revision: origin/master
+host: ubuntu@nano.quid2.org
+copy_dirs:
+  - src: /Users/titto/workspace/www/private
+    dest: private
+build_script:
+  - stack setup
+  - stack build --local-bin-path bin --copy-bins
+restart_command: killall --quiet --signal SIGKILL www;cd /home/ubuntu/www/current;bin/www </dev/null >/dev/null 2>&1 &
