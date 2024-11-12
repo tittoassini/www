@@ -34,9 +34,13 @@ import           Web.Scotty
 -- TODO:  move in tapp
 versionID :: String
 -- versionID = concat [giBranch gi, "@", giHash gi, " (", giCommitDate gi, ")"]
-versionID = concat [giHash gi, " (", giCommitDate gi, ")"]
- where
-  gi = $$tGitInfoCwd
+
+-- BUG: does not work on n2.quid2.org, why? not git
+-- versionID = concat [giHash gi, " (", giCommitDate gi, ")"]
+--  where
+--   gi = $$tGitInfoCwd
+
+versionID = "unknown"
 
 -- main = initService serviceName setup
 
@@ -96,6 +100,7 @@ httpServer =
       . staticHost hosts nonStaticPrefixes
       . addHeaders allowHeaders
 
+allowHeaders :: [(B8.ByteString, B8.ByteString)]
 allowHeaders =
   [ ("Access-Control-Allow-Origin", "*")
   , ("Access-Control-Allow-Headers", "Content-Type,Content-Length")
